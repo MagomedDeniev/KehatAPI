@@ -29,8 +29,7 @@
         "symfony/serializer": "7.4.*",
         "symfony/validator": "7.4.*",
         "symfony/yaml": "7.4.*",
-        "symfonycasts/reset-password-bundle": "^1.25",
-        "symfonycasts/verify-email-bundle": "^1.18"
+        "symfonycasts/reset-password-bundle": "^1.25"
     },
     "config": {
         "allow-plugins": {

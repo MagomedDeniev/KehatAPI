@@ -1008,9 +1008,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     }>,
  *     role_hierarchy?: array<string, string|list<scalar|Param|null>>,
  * }
- * @psalm-type SymfonycastsVerifyEmailConfig = array{
- *     lifetime?: int|Param, // The length of time in seconds that a signed URI is valid for after it is created. // Default: 3600
- * }
  * @psalm-type MakerConfig = array{
  *     root_namespace?: scalar|Param|null, // Default: "App"
  *     generate_final_classes?: bool|Param, // Default: true
@@ -1533,7 +1530,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     services?: ServicesConfig,
  *     framework?: FrameworkConfig,
  *     security?: SecurityConfig,
- *     symfonycasts_verify_email?: SymfonycastsVerifyEmailConfig,
  *     twig?: TwigConfig,
  *     doctrine?: DoctrineConfig,
  *     doctrine_migrations?: DoctrineMigrationsConfig,
@@ -1547,7 +1543,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         services?: ServicesConfig,
  *         framework?: FrameworkConfig,
  *         security?: SecurityConfig,
- *         symfonycasts_verify_email?: SymfonycastsVerifyEmailConfig,
  *         maker?: MakerConfig,
  *         twig?: TwigConfig,
  *         web_profiler?: WebProfilerConfig,
@@ -1564,7 +1559,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         services?: ServicesConfig,
  *         framework?: FrameworkConfig,
  *         security?: SecurityConfig,
- *         symfonycasts_verify_email?: SymfonycastsVerifyEmailConfig,
  *         twig?: TwigConfig,
  *         doctrine?: DoctrineConfig,
  *         doctrine_migrations?: DoctrineMigrationsConfig,
@@ -1579,7 +1573,6 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         services?: ServicesConfig,
  *         framework?: FrameworkConfig,
  *         security?: SecurityConfig,
- *         symfonycasts_verify_email?: SymfonycastsVerifyEmailConfig,
  *         twig?: TwigConfig,
  *         web_profiler?: WebProfilerConfig,
  *         doctrine?: DoctrineConfig,

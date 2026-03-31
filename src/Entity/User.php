@@ -27,6 +27,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
 
+    #[ORM\Column(length: 180, nullable: true)]
+    private ?string $confirmedEmail = null;
+
+    #[ORM\Column]
+    private ?string $password = null;
+
     #[Assert\NotBlank]
     #[Assert\Length(min: 6, max: 180)]
     #[ORM\Column(length: 180, unique: true)]
@@ -38,28 +44,54 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private array $roles = [];
 
-    #[ORM\Column]
-    private ?string $password = null;
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $token = null;
 
-    #[ORM\Column(options: ['default' => false])]
-    private bool $isEmailVerified = false;
-
-    #[ORM\Column]
-    private ?DateTimeImmutable $createdAt = null;
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $tokenRequestedAt = null;
 
     #[ORM\Column]
-    private ?DateTimeImmutable $updatedAt = null;
+    private ?\DateTimeImmutable $registeredAt = null;
 
     #[ORM\PrePersist]
     public function initialize(): void
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
+        $this->registeredAt = new \DateTimeImmutable();
+        $this->tokenRequestedAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function changePassword(string $hashedPassword): void
+    {
+        $this->password = $hashedPassword;
+    }
+
+    public function refreshConfirmationToken(string $token): void
+    {
+        $this->token = $token;
+        $this->tokenRequestedAt = new \DateTimeImmutable();
+    }
+
+    public function hasValidEmailConfirmationToken(int $timeOutSeconds): bool
+    {
+        if (!$this->token || !$this->tokenRequestedAt) {
+            return false;
+        }
+
+        $now = new \DateTimeImmutable();
+
+        return ($now->getTimestamp() - $this->tokenRequestedAt->getTimestamp()) <= $timeOutSeconds;
+    }
+
+    public function confirmEmail(): void
+    {
+        $this->confirmedEmail = $this->email;
+        $this->token = null;
+        $this->tokenRequestedAt = null;
     }
 
     public function getEmail(): ?string
@@ -70,6 +102,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): static
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function getConfirmedEmail(): ?string
+    {
+        return $this->confirmedEmail;
+    }
+
+    public function setConfirmedEmail(?string $confirmedEmail): static
+    {
+        $this->confirmedEmail = $confirmedEmail;
+
+        return $this;
+    }
+
+    /**
+     * @see PasswordAuthenticatedUserInterface
+     */
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
 
         return $this;
     }
@@ -119,21 +178,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * @see PasswordAuthenticatedUserInterface
-     */
-    public function getPassword(): ?string
-    {
-        return $this->password;
-    }
-
-    public function setPassword(string $password): static
-    {
-        $this->password = $password;
-
-        return $this;
-    }
-
-    /**
      * Ensure the session doesn't contain actual password hashes by CRC32C-hashing them, as supported since Symfony 7.3.
      */
     public function __serialize(): array
@@ -150,38 +194,38 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // @deprecated, to be removed when upgrading to Symfony 8
     }
 
-    public function isEmailVerified(): bool
+    public function getToken(): ?string
     {
-        return $this->isEmailVerified;
+        return $this->token;
     }
 
-    public function setIsEmailVerified(bool $isEmailVerified): static
+    public function setToken(?string $token): static
     {
-        $this->isEmailVerified = $isEmailVerified;
+        $this->token = $token;
 
         return $this;
     }
 
-    public function getCreatedAt(): ?DateTimeImmutable
+    public function getTokenRequestedAt(): ?\DateTimeImmutable
     {
-        return $this->createdAt;
+        return $this->tokenRequestedAt;
     }
 
-    public function setCreatedAt(DateTimeImmutable $createdAt): static
+    public function setTokenRequestedAt(?\DateTimeImmutable $tokenRequestedAt): static
     {
-        $this->createdAt = $createdAt;
+        $this->tokenRequestedAt = $tokenRequestedAt;
 
         return $this;
     }
 
-    public function getUpdatedAt(): ?DateTimeImmutable
+    public function getRegisteredAt(): ?\DateTimeImmutable
     {
-        return $this->updatedAt;
+        return $this->registeredAt;
     }
 
-    public function setUpdatedAt(DateTimeImmutable $updatedAt): static
+    public function setRegisteredAt(\DateTimeImmutable $registeredAt): static
     {
-        $this->updatedAt = $updatedAt;
+        $this->registeredAt = $registeredAt;
 
         return $this;
     }

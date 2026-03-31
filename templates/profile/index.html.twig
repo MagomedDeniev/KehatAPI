@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello ProfileController!{% endblock %}
+
+{% block body %}
+    <h1>{{ user.username }}</h1>
+    <ul>
+        <li><b>ID:</b> {{ user.id }}</li>
+        <li><b>Username:</b> {{ user.username }}</li>
+        <li><b>Email:</b> {{ user.email }}</li>
+        <li><b>Registered At:</b> {{ user.registeredAt | date('d.m.Y H:i') }}</li>
+    </ul>
+{% endblock %}

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+    <head>
+        <meta charset="UTF-8">
+        <title>Письмо от Kehat</title>
+        <style>
+            .kht-notification-template {
+                font-family: -apple-system,BlinkMacSystemFont,Roboto,Open Sans,Helvetica Neue,"Noto Sans Armenian","Noto Sans Bengali","Noto Sans Cherokee","Noto Sans Devanagari","Noto Sans Ethiopic","Noto Sans Georgian","Noto Sans Hebrew","Noto Sans Kannada","Noto Sans Khmer","Noto Sans Lao","Noto Sans Osmanya","Noto Sans Tamil","Noto Sans Telugu","Noto Sans Thai",sans-serif;
+                width: 100%;
+                padding-top: 30px;
+                border-radius: 5px;
+                box-sizing: border-box;
+            }
+
+            .kht-notify-box {
+                width: 500px;
+                margin: 0 auto;
+                border-radius: 5px;
+            }
+
+            .kht-notify-box img {
+                width: 280px;
+                margin: 0 auto;
+                display: table;
+            }
+
+            .btn {
+                padding: 10px;
+                border-radius: 3px;
+                color: #fff;
+                text-decoration: unset;
+            }
+
+            .btn-blue {
+                background-color: #3498db;
+            }
+
+            .btn:hover {
+                opacity: 0.9;
+            }
+
+            table {
+                margin: 0 auto;
+                padding-top: 10px;
+            }
+
+            table a {
+                color: #fff !important;
+                text-decoration: unset;
+            }
+            .kht-email-info {
+                font-size: 12px;
+                color: #999;
+                padding-top: 14px;
+                margin-bottom: unset;
+            }
+            .kht-email-info a {
+                text-decoration: unset;
+            }
+            .kht-email-logo {
+                display: block;
+                margin: 0 auto;
+                text-align: center;
+                font-weight: 600;
+                font-size: 60px;
+                text-transform: lowercase;
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <div class="kht-notification-template">
+
+            <div class="kht-notify-box">
+
+                <div class="kht-email-logo">[ кехат ]</div>
+
+                <br><br>
+
+                {% block body %}{% endblock %}
+
+                <p class="kht-email-info">
+                    © Kehat Inc. 32 Avenue des Fleurs, Nice, AMCA 06000
+                    <br><br>
+{#                    Это сообщение отправлено на <b>{{ user.email }}</b> для пользователя <a href="{{ absolute_url(path('user_profile', {'username': user.username})) }}">{{ user.username }}</a>.#}
+                    Это сообщение отправлено на <b>{{ user.email }}</b> для пользователя <a href="{# TODO: Path to profile #}">{{ user.username }}</a>.
+                </p>
+
+            </div>
+
+        </div>
+
+    </body>
+
+</html>
