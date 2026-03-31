@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
     <head>
         <meta charset="UTF-8">
         <title>{% block title %}Welcome!{% endblock %}</title>
@@ -50,11 +50,14 @@
             <ul>
                 <li><a href="{{ path('app_home') }}">Home</a></li>
                 {% if app.user %}
-                    <li><a href="{{ path('profile_index', {'username':app.user.username}) }}">Профиль</a></li>
+                    <li><a href="{{ path('user_profile', {'username':app.user.username}) }}">Профиль</a></li>
                 {% endif %}
-                <li><a href="{{ path('user_register') }}">Registration</a></li>
                 <li><a href="{{ path('user_login') }}">Login</a></li>
+                <li><a href="{{ path('user_register') }}">Registration</a></li>
+                <li><a href="{{ path('user_edit_password') }}">Edit password</a></li>
                 <li><a href="{{ path('user_forgot_password') }}">Reset password</a></li>
+                <li><a href="{{ path('user_restore_password',{'token':'dfssf'}) }}">Restore password</a></li>
+                <li><a href="{{ path('user_email_confirmation',{'token':'dfssf'}) }}">Email confirmation</a></li>
                 <li><a href="{{ path('user_logout') }}">Logout</a></li>
             </ul>
         </div>

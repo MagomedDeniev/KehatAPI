@@ -4,22 +4,26 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\User\ForgotPasswordFormType;
-use App\Form\User\NewPasswordFormType;
+use App\Form\User\EditPasswordFormType;
 use App\Form\User\RegistrationFormType;
-use App\Repository\UserRepository;
+use App\Form\User\RestorePasswordFormType;
 use App\Service\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 #[Route('/user', name: 'user_')]
 final class UserController extends AbstractController
 {
-    #[Route('/{username}', name: 'profile')]
+    #[Route('/profile/{username}', name: 'profile')]
+    #[IsGranted('ROLE_USER')]
     public function profile(User $user): Response
     {
         return $this->render('user/profile.html.twig', [
@@ -30,7 +34,11 @@ final class UserController extends AbstractController
     #[Route('/login', name: 'login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
-        return $this->render('security/login.html.twig', [
+        if ($this->getUser()) {
+            return $this->redirectToRoute('app_home');
+        }
+
+        return $this->render('user/login.html.twig', [
             'last_username' => $authenticationUtils->getLastUsername(),
             'error' => $authenticationUtils->getLastAuthenticationError(),
         ]);
@@ -42,6 +50,10 @@ final class UserController extends AbstractController
     #[Route('/register', name: 'register')]
     public function register(Request $request, Security $security, UserService $userService): Response
     {
+        if ($this->getUser()) {
+            return $this->redirectToRoute('app_home');
+        }
+
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
@@ -53,7 +65,7 @@ final class UserController extends AbstractController
             return $security->login($user);
         }
 
-        return $this->render('registration/register.html.twig', [
+        return $this->render('user/register.html.twig', [
             'registrationForm' => $form,
         ]);
     }
@@ -62,8 +74,12 @@ final class UserController extends AbstractController
      * @throws TransportExceptionInterface
      */
     #[Route('/forgotPassword', name: 'forgot_password')]
-    public function forgotPassword(Request $request, Security $security, UserService $userService): Response
+    public function forgotPassword(Request $request, UserService $userService): Response
     {
+        if ($this->getUser()) {
+            return $this->redirectToRoute('app_home');
+        }
+
         $form = $this->createForm(ForgotPasswordFormType::class);
         $form->handleRequest($request);
 
@@ -78,11 +94,14 @@ final class UserController extends AbstractController
         ]);
     }
 
-    #[Route('/newPassword/{token}', name: 'new_password')]
-    public function newPassword($token, Request $request, UserService $userService, UserRepository $userRepo): Response
+    #[Route('/restorePassword/{token}', name: 'restore_password')]
+    public function restorePassword($token, Request $request, UserService $userService): Response
     {
+        if ($this->getUser()) {
+            return $this->redirectToRoute('app_home');
+        }
         if ($user = $userService->tokenIsValid($token)) {
-            $form = $this->createForm(NewPasswordFormType::class);
+            $form = $this->createForm(RestorePasswordFormType::class);
             $form->handleRequest($request);
 
             if ($form->isSubmitted() && $form->isValid()) {
@@ -92,13 +111,36 @@ final class UserController extends AbstractController
                 return $this->redirectToRoute('app_home');
             }
 
-            return $this->render('user/new_password.html.twig', [
-                'newPasswordForm' => $form,
+            return $this->render('user/restore_password.html.twig', [
+                'restorePasswordForm' => $form,
             ]);
         } else {
             $this->addFlash('success', 'Ссылка восстановления пароля недействительна или срок её действия истёк, повторите попытку.');
             return $this->redirectToRoute('app_home');
         }
+    }
+
+    #[Route('/editPassword', name: 'edit_password')]
+    #[IsGranted('ROLE_USER')]
+    public function editPassword(#[CurrentUser] User $user, Request $request, UserService $userService): Response
+    {
+        $form = $this->createForm(EditPasswordFormType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            if ($userService->isPasswordValid($user,$form->get('current')->getData())) {
+                $userService->updatePassword($user, $form->get('plainPassword')->getData());
+                $this->addFlash('success', 'Ваш пароль успешно изменен');
+
+                return $this->redirectToRoute('user_profile', ['username' => $user->getUsername()]);
+            } else {
+                $form->get('current')->addError(new FormError('Текущий пароль указан неправильно'));
+            }
+        }
+
+        return $this->render('user/edit_password.html.twig', [
+            'restorePasswordForm' => $form,
+        ]);
     }
 
     #[Route('/email/confirmation/{token}', name: 'email_confirmation')]

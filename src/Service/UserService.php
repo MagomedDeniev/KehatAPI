@@ -39,6 +39,11 @@ final readonly class UserService
         );
     }
 
+    public function isPasswordValid(User $user, string $plainPassword): bool
+    {
+        return $this->passwordHasher->isPasswordValid($user,$plainPassword);
+    }
+
     public function updatePassword(User $user, string $plainPassword): void
     {
         $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
@@ -64,18 +69,6 @@ final readonly class UserService
         );
     }
 
-    public function confirmEmailIfTokenIsValid(string $token): bool
-    {
-        if ($user = $this->tokenIsValid($token)) {
-            $user->confirmEmail();
-            $this->em->flush();
-
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public function tokenIsValid(string $token): bool|User
     {
         $user = $this->userRepository->findOneBy(['token' => $token]);
@@ -89,5 +82,17 @@ final readonly class UserService
         }
 
         return $user;
+    }
+
+    public function confirmEmailIfTokenIsValid(string $token): bool
+    {
+        if ($user = $this->tokenIsValid($token)) {
+            $user->confirmEmail();
+            $this->em->flush();
+
+            return true;
+        } else {
+            return false;
+        }
     }
 }
