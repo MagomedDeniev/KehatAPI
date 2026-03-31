@@ -29,4 +29,4 @@ services:
 
     App\Service\UserService:
         arguments:
-            $timeOutSeconds: '%env(resolve:TOKEN_TIME_OUT_SECONDS)%'
+            $tokenTimeOutSeconds: '%env(resolve:TOKEN_TIME_OUT_SECONDS)%'

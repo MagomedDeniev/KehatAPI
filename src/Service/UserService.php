@@ -17,7 +17,7 @@ final readonly class UserService
         private UserPasswordHasherInterface $passwordHasher,
         private TokenGeneratorInterface     $tokenGenerator,
         private MailerService               $mailer,
-        private int                         $timeOutSeconds
+        private int                         $tokenTimeOutSeconds
     ){}
 
     /**
@@ -49,7 +49,7 @@ final readonly class UserService
             return false;
         }
 
-        if (!$user->hasValidEmailConfirmationToken($this->timeOutSeconds)) {
+        if (!$user->hasValidEmailConfirmationToken($this->tokenTimeOutSeconds)) {
             return false;
         }
 
