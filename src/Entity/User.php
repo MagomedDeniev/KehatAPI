@@ -65,11 +65,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->id;
     }
 
-    public function changePassword(string $hashedPassword): void
-    {
-        $this->password = $hashedPassword;
-    }
-
     public function refreshConfirmationToken(string $token): void
     {
         $this->token = $token;
@@ -90,6 +85,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function confirmEmail(): void
     {
         $this->confirmedEmail = $this->email;
+        $this->clearToken();
+    }
+
+    public function clearToken(): void
+    {
         $this->token = null;
         $this->tokenRequestedAt = null;
     }
@@ -194,18 +194,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // @deprecated, to be removed when upgrading to Symfony 8
     }
 
-    public function getToken(): ?string
-    {
-        return $this->token;
-    }
-
-    public function setToken(?string $token): static
-    {
-        $this->token = $token;
-
-        return $this;
-    }
-
     public function getTokenRequestedAt(): ?\DateTimeImmutable
     {
         return $this->tokenRequestedAt;
@@ -221,12 +209,5 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRegisteredAt(): ?\DateTimeImmutable
     {
         return $this->registeredAt;
-    }
-
-    public function setRegisteredAt(\DateTimeImmutable $registeredAt): static
-    {
-        $this->registeredAt = $registeredAt;
-
-        return $this;
     }
 }

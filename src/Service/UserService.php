@@ -25,9 +25,7 @@ final readonly class UserService
      */
     public function register(User $user, string $plainPassword): void
     {
-        $hashedPassword = $this->passwordHasher->hashPassword($user, $plainPassword);
-
-        $user->changePassword($hashedPassword);
+        $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
         $user->refreshConfirmationToken($this->tokenGenerator->generateToken());
 
         $this->em->persist($user);
@@ -41,7 +39,44 @@ final readonly class UserService
         );
     }
 
-    public function confirmEmailIfValid(string $token): bool
+    public function updatePassword(User $user, string $plainPassword): void
+    {
+        $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
+        $user->clearToken();
+
+        $this->em->flush();
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function sendConfirmationToken(string $email): void
+    {
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+        $user->refreshConfirmationToken($this->tokenGenerator->generateToken());
+        $this->em->flush();
+
+        $this->mailer->sendTemplate(
+            to: (string) $user->getEmail(),
+            subject: 'Восстановление аккаунта',
+            template: 'mailer/reset_password.html.twig',
+            context: ['user' => $user],
+        );
+    }
+
+    public function confirmEmailIfTokenIsValid(string $token): bool
+    {
+        if ($user = $this->tokenIsValid($token)) {
+            $user->confirmEmail();
+            $this->em->flush();
+
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function tokenIsValid(string $token): bool|User
     {
         $user = $this->userRepository->findOneBy(['token' => $token]);
 
@@ -53,9 +88,6 @@ final readonly class UserService
             return false;
         }
 
-        $user->confirmEmail();
-        $this->em->flush();
-
-        return true;
+        return $user;
     }
 }
