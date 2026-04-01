@@ -58,15 +58,18 @@ final readonly class UserService
     public function sendConfirmationToken(string $email): void
     {
         $user = $this->userRepository->findOneBy(['email' => $email]);
-        $user->refreshConfirmationToken($this->tokenGenerator->generateToken());
-        $this->em->flush();
 
-        $this->mailer->sendTemplate(
-            to: (string) $user->getEmail(),
-            subject: 'Восстановление аккаунта',
-            template: 'mailer/reset_password.html.twig',
-            context: ['user' => $user],
-        );
+        if ($user instanceof User) {
+            $user->refreshConfirmationToken($this->tokenGenerator->generateToken());
+            $this->em->flush();
+
+            $this->mailer->sendTemplate(
+                to: (string) $user->getEmail(),
+                subject: 'Восстановление аккаунта',
+                template: 'mailer/reset_password.html.twig',
+                context: ['user' => $user],
+            );
+        }
     }
 
     public function tokenIsValid(string $token): bool|User
