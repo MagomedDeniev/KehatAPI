@@ -2,6 +2,8 @@
 
 namespace App\Service;
 
+use App\DTO\Request\ChangeMeRequest;
+use App\DTO\Request\RegisterRequest;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,9 +25,12 @@ final readonly class UserService
     /**
      * @throws TransportExceptionInterface
      */
-    public function register(User $user, string $plainPassword): void
+    public function registerFromDto(RegisterRequest $dto): void
     {
-        $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
+        $user = new User();
+        $user->setUsername($dto->username);
+        $user->setEmail($dto->email);
+        $user->setPassword($this->passwordHasher->hashPassword($user, $dto->password));
         $user->refreshConfirmationToken($this->tokenGenerator->generateToken());
 
         $this->em->persist($user);
@@ -48,6 +53,14 @@ final readonly class UserService
     {
         $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
         $user->clearToken();
+
+        $this->em->flush();
+    }
+
+    public function updateProfile(User $user, ChangeMeRequest $dto): void
+    {
+        $user->setUsername($dto->username);
+        $user->setEmail($dto->email);
 
         $this->em->flush();
     }

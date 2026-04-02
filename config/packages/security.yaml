@@ -16,15 +16,28 @@ security:
             # Ensure dev tools and static assets are always allowed
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
-        main:
-            lazy: true
-            provider: app_user_provider
-            form_login:
-                login_path: user_login
-                check_path: user_login
-                enable_csrf: true
-            logout:
-                path: user_logout
+        login:
+            pattern: ^/api/login_check$
+            stateless: true
+            json_login:
+                check_path: /api/login_check
+                username_path: email
+                password_path: password
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+        api:
+            pattern: ^/api
+            stateless: true
+            jwt: ~
+#        main:
+#            lazy: true
+#            provider: app_user_provider
+#            form_login:
+#                login_path: user_login
+#                check_path: user_login
+#                enable_csrf: true
+#            logout:
+#                path: user_logout
                 # where to redirect after logout
                 # target: app_any_route
 
@@ -36,8 +49,12 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/login_check$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/register$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/password/forgot$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/password/reset$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/email/verify$, roles: PUBLIC_ACCESS }
+        - { path: ^/api, roles: ROLE_USER }
 
 when@test:
     security:
