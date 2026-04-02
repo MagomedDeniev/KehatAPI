@@ -4,28 +4,52 @@
         <meta charset="UTF-8">
         <title>{% block title %}Welcome!{% endblock %}</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
-
-        {% block javascripts %}
-        {% endblock %}
-
-        {% set frankenphpHotReload = app.request.server.get('FRANKENPHP_HOT_RELOAD') %}
-        {% if frankenphpHotReload %}
-        <meta name="frankenphp-hot-reload:url" content="{{ frankenphpHotReload }}">
-        <script src="https://cdn.jsdelivr.net/npm/idiomorph"></script>
-        <script src="https://cdn.jsdelivr.net/npm/frankenphp-hot-reload/+esm" type="module"></script>
-        {% endif %}
     </head>
     <body>
 
         <style>
             .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
             .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+            body {
+                background: #f6f6f6;
+            }
+
+            .mailer-mails {
+                width: 600px;
+                margin: 0 auto;
+            }
+
+            .mailer-mails h2 {
+                background: #000;
+                margin: unset;
+                padding: 14px 10px 10px;
+                border-radius: 10px 10px 0 0;
+                border-right: 1px solid #dfdfdf;
+                border-left: 1px solid #dfdfdf;
+                border-top: 1px solid #dfdfdf;
+                color: #fff;
+                font-weight: 300;
+                text-transform: uppercase;
+                font-size: 20px;
+            }
+
+            .mailer-mails p a {
+                color: #000;
+                font-weight: 700;
+            }
+
+            .mailer-mails .mailer-mails-box {
+                border: 1px solid #dfdfdf;
+                margin-bottom: 30px;
+                padding: 0 0 46px;
+                border-radius: 0 0 10px 10px;
+                background: white;
+            }
         </style>
 
         <div class="example-wrapper">
-            <h1>КЕХАТ</h1>
+
+            <br>
 
             {% for label, messages in app.flashes %}
                 {% for message in messages %}
@@ -44,22 +68,8 @@
             {% block body %}{% endblock %}
 
             <br>
-            <hr>
             <br>
-
-            <ul>
-                <li><a href="{{ path('app_home') }}">Home</a></li>
-                {% if app.user %}
-                    <li><a href="{{ path('user_profile', {'username':app.user.username}) }}">Профиль</a></li>
-                {% endif %}
-                <li><a href="{{ path('user_login') }}">Login</a></li>
-                <li><a href="{{ path('user_register') }}">Registration</a></li>
-                <li><a href="{{ path('user_edit_password') }}">Edit password</a></li>
-                <li><a href="{{ path('user_forgot_password') }}">Forgot password</a></li>
-                <li><a href="{{ path('user_restore_password',{'token':'dfssf'}) }}">Restore password</a></li>
-                <li><a href="{{ path('user_email_confirmation',{'token':'dfssf'}) }}">Email confirmation</a></li>
-                <li><a href="{{ path('user_logout') }}">Logout</a></li>
-            </ul>
+            <br>
         </div>
     </body>
 </html>

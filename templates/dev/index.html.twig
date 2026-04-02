@@ -1,0 +1,22 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}КЕХАТ{% endblock %}
+
+{% block body %}
+
+    <div class="mailer-mails">
+
+        <h2 style="text-align: center">Подтверждение почты</h2>
+
+        <div class="mailer-mails-box">{% include 'mailer/email_confirmation.html.twig'  with {'user': {'username' : 'deniev', 'email' : 'magomed@deniev.com'}} %}</div>
+
+        <h2 style="text-align: center">Приветствие после регистрации</h2>
+
+        <div class="mailer-mails-box">{% include 'mailer/registration.html.twig'  with {'user': {'username' : 'deniev', 'email' : 'magomed@deniev.com'}} %}</div>
+
+        <h2 style="text-align: center">Восстановления аккаунта</h2>
+
+        <div class="mailer-mails-box">{% include 'mailer/reset_password.html.twig'  with {'user': {'username' : 'deniev', 'email' : 'magomed@deniev.com'}} %}</div>
+    </div>
+
+{% endblock %}
