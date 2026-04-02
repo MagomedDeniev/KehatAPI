@@ -2,17 +2,22 @@
 
 namespace App\DTO\Request;
 
+use App\Validator\Compounds as Compound;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Validator\Constraints as Constraint;
 
-final class ChangePasswordRequest
+
+#[Constraint\ValidRepeatedPassword]
+final readonly class ChangePasswordRequest
 {
-    #[Assert\NotBlank]
-    public string $currentPassword = '';
+    public function __construct(
+        #[Compound\CurrentPassword]
+        public string $currentPassword,
 
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 8, max: 4096, minMessage: 'Your password should be at least {{ limit }} characters')]
-    public string $newPassword = '';
+        #[Compound\Password]
+        public string $newPassword,
 
-    #[Assert\NotBlank]
-    public string $repeatPassword = '';
+        #[Assert\NotBlank]
+        public string $repeatPassword,
+    ){}
 }

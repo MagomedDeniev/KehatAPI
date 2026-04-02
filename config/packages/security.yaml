@@ -49,12 +49,12 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        - { path: ^/api/login_check$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/register$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/password/forgot$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/password/reset$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/email/verify$, roles: PUBLIC_ACCESS }
-        - { path: ^/api, roles: ROLE_USER }
+#        - { path: ^/api/login_check$, roles: PUBLIC_ACCESS }
+#        - { path: ^/api/register$, roles: PUBLIC_ACCESS }
+#        - { path: ^/api/password/forgot$, roles: PUBLIC_ACCESS }
+#        - { path: ^/api/password/reset$, roles: PUBLIC_ACCESS }
+#        - { path: ^/api/email/verify$, roles: PUBLIC_ACCESS }
+#        - { path: ^/api, roles: ROLE_USER }
 
 when@test:
     security:

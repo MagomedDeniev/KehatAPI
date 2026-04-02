@@ -2,14 +2,21 @@
 
 namespace App\DTO\Request;
 
+use App\Validator\Compounds as Compound;
+use App\Validator\Constraints as Constraint;
 use Symfony\Component\Validator\Constraints as Assert;
 
-final class ForgotPasswordRestoreRequest
+#[Constraint\ValidRepeatedPassword]
+final readonly class ForgotPasswordRestoreRequest
 {
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 8, max: 4096, minMessage: 'Your password should be at least {{ limit }} characters')]
-    public string $newPassword = '';
+    public function __construct(
+        #[Compound\Token]
+        public string $token,
 
-    #[Assert\NotBlank]
-    public string $repeatPassword = '';
+        #[Compound\Password]
+        public string $newPassword,
+
+        #[Assert\NotBlank]
+        public string $repeatPassword,
+    ){}
 }

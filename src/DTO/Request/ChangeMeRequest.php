@@ -2,16 +2,15 @@
 
 namespace App\DTO\Request;
 
-use Symfony\Component\Validator\Constraints as Assert;
+use App\Validator\Compounds as Compound;
 
-final class ChangeMeRequest
+final readonly class ChangeMeRequest
 {
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 6, max: 180)]
-    public string $username = '';
+    public function __construct(
+        #[Compound\Username]
+        public string $username,
 
-    #[Assert\NotBlank]
-    #[Assert\Email]
-    #[Assert\Length(min: 8, max: 180)]
-    public string $email;
+        #[Compound\Email]
+        public string $email,
+    ){}
 }

@@ -65,13 +65,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->id;
     }
 
-    public function refreshConfirmationToken(string $token): void
+    public function refreshToken(string $token): void
     {
         $this->token = $token;
         $this->tokenRequestedAt = new \DateTimeImmutable();
     }
 
-    public function hasValidEmailConfirmationToken(int $timeOutSeconds): bool
+    public function hasValidToken(int $timeOutSeconds): bool
     {
         if (!$this->token || !$this->tokenRequestedAt) {
             return false;

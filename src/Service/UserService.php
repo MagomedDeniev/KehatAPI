@@ -31,7 +31,7 @@ final readonly class UserService
         $user->setUsername($dto->username);
         $user->setEmail($dto->email);
         $user->setPassword($this->passwordHasher->hashPassword($user, $dto->password));
-        $user->refreshConfirmationToken($this->tokenGenerator->generateToken());
+        $user->refreshToken($this->tokenGenerator->generateToken());
 
         $this->em->persist($user);
         $this->em->flush();
@@ -49,8 +49,15 @@ final readonly class UserService
         return $this->passwordHasher->isPasswordValid($user,$plainPassword);
     }
 
-    public function updatePassword(User $user, string $plainPassword): void
+    public function updatePasswordFromUser(User $user, string $plainPassword): void
     {
+        $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
+        $this->em->flush();
+    }
+
+    public function updatePasswordFromToken(string $token, string $plainPassword): void
+    {
+        $user = $this->userRepository->findOneBy(['token' => $token]);
         $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
         $user->clearToken();
 
@@ -73,7 +80,7 @@ final readonly class UserService
         $user = $this->userRepository->findOneBy(['email' => $email]);
 
         if ($user instanceof User) {
-            $user->refreshConfirmationToken($this->tokenGenerator->generateToken());
+            $user->refreshToken($this->tokenGenerator->generateToken());
             $this->em->flush();
 
             $this->mailer->sendTemplate(
@@ -93,7 +100,7 @@ final readonly class UserService
             return false;
         }
 
-        if (!$user->hasValidEmailConfirmationToken($this->tokenTimeOutSeconds)) {
+        if (!$user->hasValidToken($this->tokenTimeOutSeconds)) {
             return false;
         }
 

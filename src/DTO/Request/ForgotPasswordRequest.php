@@ -2,11 +2,12 @@
 
 namespace App\DTO\Request;
 
-use Symfony\Component\Validator\Constraints as Assert;
+use App\Validator\Compounds as Compound;
 
-final class ForgotPasswordRequest
+final readonly class ForgotPasswordRequest
 {
-    #[Assert\NotBlank]
-    #[Assert\Email]
-    public string $email;
+    public function __construct(
+        #[Compound\Email]
+        public string $email
+    ){}
 }

@@ -30,3 +30,7 @@ services:
     App\Service\UserService:
         arguments:
             $tokenTimeOutSeconds: '%env(resolve:TOKEN_TIME_OUT_SECONDS)%'
+
+    App\Validator\Constraints\ValidTokenValidator:
+        arguments:
+            $tokenTimeOutSeconds: '%env(resolve:TOKEN_TIME_OUT_SECONDS)%'
