@@ -54,7 +54,7 @@ final class AuthController extends AbstractController
         ]);
     }
 
-    #[Route('/email/verify/{token}', name: 'email_verify', methods: ['GET'])]
+    #[Route('/email/verify', name: 'email_verify', methods: ['POST'])]
     public function emailVerify(#[MapRequestPayload] EmailVerifyRequest $emailVerifyRequest, UserService $userService): JsonResponse {
         $userService->confirmEmailIfTokenIsValid($emailVerifyRequest);
 

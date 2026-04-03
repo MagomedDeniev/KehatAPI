@@ -98,7 +98,7 @@ final readonly class UserService
     public function confirmEmailIfTokenIsValid(EmailVerifyRequest $dto): void
     {
         $token = $this->tokenService->getToken($dto->token);
-        $user = $this->userRepository->findOneBy(['token' => $token->getUserId()]);
+        $user = $this->userRepository->findOneBy(['id' => $token->getUserId()]);
         $user->setConfirmedEmail($token->getEmail());
         $this->tokenService->removeToken($token, false);
 
