@@ -38,17 +38,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180, unique: true)]
     private ?string $username = null;
 
-    /**
-     * @var list<string> The user roles
-     */
     #[ORM\Column]
     private array $roles = [];
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $token = null;
-
-    #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $tokenRequestedAt = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $registeredAt = null;
@@ -57,41 +48,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function initialize(): void
     {
         $this->registeredAt = new \DateTimeImmutable();
-        $this->tokenRequestedAt = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function refreshToken(string $token): void
-    {
-        $this->token = $token;
-        $this->tokenRequestedAt = new \DateTimeImmutable();
-    }
-
-    public function hasValidToken(int $timeOutSeconds): bool
-    {
-        if (!$this->token || !$this->tokenRequestedAt) {
-            return false;
-        }
-
-        $now = new \DateTimeImmutable();
-
-        return ($now->getTimestamp() - $this->tokenRequestedAt->getTimestamp()) <= $timeOutSeconds;
-    }
-
-    public function confirmEmail(): void
-    {
-        $this->confirmedEmail = $this->email;
-        $this->clearToken();
-    }
-
-    public function clearToken(): void
-    {
-        $this->token = null;
-        $this->tokenRequestedAt = null;
     }
 
     public function getEmail(): ?string
@@ -118,9 +79,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @see PasswordAuthenticatedUserInterface
-     */
     public function getPassword(): ?string
     {
         return $this->password;
@@ -145,31 +103,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
     public function getUserIdentifier(): string
     {
         return (string) $this->email;
     }
 
-    /**
-     * @see UserInterface
-     */
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
     }
 
-    /**
-     * @param list<string> $roles
-     */
     public function setRoles(array $roles): static
     {
         $this->roles = $roles;
@@ -177,9 +123,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * Ensure the session doesn't contain actual password hashes by CRC32C-hashing them, as supported since Symfony 7.3.
-     */
     public function __serialize(): array
     {
         $data = (array) $this;
@@ -188,35 +131,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $data;
     }
 
-    #[\Deprecated]
-    public function eraseCredentials(): void
-    {
-        // @deprecated, to be removed when upgrading to Symfony 8
-    }
-
-    public function getToken(): ?string
-    {
-        return $this->token;
-    }
-
-    public function setToken(?string $token): static
-    {
-        $this->token = $token;
-
-        return $this;
-    }
-
-    public function getTokenRequestedAt(): ?\DateTimeImmutable
-    {
-        return $this->tokenRequestedAt;
-    }
-
-    public function setTokenRequestedAt(?\DateTimeImmutable $tokenRequestedAt): static
-    {
-        $this->tokenRequestedAt = $tokenRequestedAt;
-
-        return $this;
-    }
+    public function eraseCredentials(): void {}
 
     public function getRegisteredAt(): ?\DateTimeImmutable
     {

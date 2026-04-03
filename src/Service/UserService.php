@@ -3,8 +3,11 @@
 namespace App\Service;
 
 use App\DTO\Request\ChangeMeRequest;
+use App\DTO\Request\EmailVerifyRequest;
+use App\DTO\Request\ForgotPasswordRestoreRequest;
 use App\DTO\Request\RegisterRequest;
 use App\Entity\User;
+use App\Repository\TokenRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -17,51 +20,55 @@ final readonly class UserService
         private EntityManagerInterface      $em,
         private UserRepository              $userRepository,
         private UserPasswordHasherInterface $passwordHasher,
-        private TokenGeneratorInterface     $tokenGenerator,
-        private MailerService               $mailer,
-        private int                         $tokenTimeOutSeconds
+        private MailerService               $mailerService,
+        private TokenService                $tokenService
     ){}
 
     /**
      * @throws TransportExceptionInterface
      */
-    public function registerFromDto(RegisterRequest $dto): void
+    public function register(RegisterRequest $dto): void
     {
         $user = new User();
-        $user->setUsername($dto->username);
         $user->setEmail($dto->email);
+        $user->setUsername($dto->username);
         $user->setPassword($this->passwordHasher->hashPassword($user, $dto->password));
-        $user->refreshToken($this->tokenGenerator->generateToken());
-
         $this->em->persist($user);
         $this->em->flush();
 
-        $this->mailer->sendTemplate(
+        $token = $this->tokenService->createEmailConfirmationToken($user);
+
+        $this->mailerService->sendTemplate(
             to: (string) $user->getEmail(),
             subject: 'Подтверждение электронной почты',
             template: 'mailer/registration.html.twig',
-            context: ['user' => $user],
+            context: [
+                'user' => $user,
+                'token' => $token,
+            ],
         );
     }
 
-    public function isPasswordValid(User $user, string $plainPassword): bool
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function sendPasswordRecoveryEmail(string $email): void
     {
-        return $this->passwordHasher->isPasswordValid($user,$plainPassword);
-    }
+        $user = $this->userRepository->findOneBy(['email' => $email]);
 
-    public function updatePasswordFromUser(User $user, string $plainPassword): void
-    {
-        $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
-        $this->em->flush();
-    }
+        if ($user instanceof User) {
+            $token = $this->tokenService->createPasswordRecoveryToken($user);
 
-    public function updatePasswordFromToken(string $token, string $plainPassword): void
-    {
-        $user = $this->userRepository->findOneBy(['token' => $token]);
-        $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
-        $user->clearToken();
-
-        $this->em->flush();
+            $this->mailerService->sendTemplate(
+                to: (string) $user->getEmail(),
+                subject: 'Восстановление аккаунта',
+                template: 'mailer/recovery_password.html.twig',
+                context: [
+                    'user' => $user,
+                    'token' => $token,
+                ],
+            );
+        }
     }
 
     public function updateProfile(User $user, ChangeMeRequest $dto): void
@@ -72,50 +79,29 @@ final readonly class UserService
         $this->em->flush();
     }
 
-    /**
-     * @throws TransportExceptionInterface
-     */
-    public function sendConfirmationToken(string $email): void
+    public function updatePasswordFromUser(User $user, string $plainPassword): void
     {
-        $user = $this->userRepository->findOneBy(['email' => $email]);
-
-        if ($user instanceof User) {
-            $user->refreshToken($this->tokenGenerator->generateToken());
-            $this->em->flush();
-
-            $this->mailer->sendTemplate(
-                to: (string) $user->getEmail(),
-                subject: 'Восстановление аккаунта',
-                template: 'mailer/reset_password.html.twig',
-                context: ['user' => $user],
-            );
-        }
+        $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
+        $this->em->flush();
     }
 
-    public function tokenIsValid(string $token): bool|User
+    public function updatePasswordFromToken(ForgotPasswordRestoreRequest $dto): void
     {
-        $user = $this->userRepository->findOneBy(['token' => $token]);
+        $token = $this->tokenService->getToken($dto->token);
+        $user = $this->userRepository->findOneBy(['id' => $token->getUserId()]);
+        $user->setPassword($this->passwordHasher->hashPassword($user, $dto->newPassword));
+        $this->tokenService->removeToken($token, false);
 
-        if (!$user instanceof User) {
-            return false;
-        }
-
-        if (!$user->hasValidToken($this->tokenTimeOutSeconds)) {
-            return false;
-        }
-
-        return $user;
+        $this->em->flush();
     }
 
-    public function confirmEmailIfTokenIsValid(string $token): bool
+    public function confirmEmailIfTokenIsValid(EmailVerifyRequest $dto): void
     {
-        if ($user = $this->tokenIsValid($token)) {
-            $user->confirmEmail();
-            $this->em->flush();
+        $token = $this->tokenService->getToken($dto->token);
+        $user = $this->userRepository->findOneBy(['token' => $token->getUserId()]);
+        $user->setConfirmedEmail($token->getEmail());
+        $this->tokenService->removeToken($token, false);
 
-            return true;
-        } else {
-            return false;
-        }
+        $this->em->flush();
     }
 }

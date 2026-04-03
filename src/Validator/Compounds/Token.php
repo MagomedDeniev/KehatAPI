@@ -14,7 +14,6 @@ final class Token extends Compound
     {
         return [
             new Assert\NotBlank(),
-            new Assert\Type('string'),
             new Assert\Length(min: UserRulesService::TOKEN_MIN, max: UserRulesService::TOKEN_MAX),
             new Constraint\ValidToken()
         ];

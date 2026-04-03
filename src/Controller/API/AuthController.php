@@ -2,6 +2,7 @@
 
 namespace App\Controller\API;
 
+use App\DTO\Request\EmailVerifyRequest;
 use App\DTO\Request\ForgotPasswordRequest;
 use App\DTO\Request\ForgotPasswordRestoreRequest;
 use App\DTO\Request\RegisterRequest;
@@ -21,7 +22,7 @@ final class AuthController extends AbstractController
     #[Route('/register', name: 'register', methods: ['POST'])]
     public function register(#[MapRequestPayload] RegisterRequest $registerRequest, UserService $userService): JsonResponse
     {
-        $userService->registerFromDto($registerRequest);
+        $userService->register($registerRequest);
 
         return $this->json([
             'success' => true,
@@ -35,7 +36,7 @@ final class AuthController extends AbstractController
     #[Route('/password/forgot', name: 'password_forgot', methods: ['POST'])]
     public function passwordForgot(#[MapRequestPayload] ForgotPasswordRequest $forgotPasswordRequest, UserService $userService): JsonResponse
     {
-        $userService->sendConfirmationToken($forgotPasswordRequest->email);
+        $userService->sendPasswordRecoveryEmail($forgotPasswordRequest->email);
 
         return $this->json([
             'success' => true,
@@ -43,9 +44,9 @@ final class AuthController extends AbstractController
         ]);
     }
 
-    #[Route('/password/reset', name: 'password_reset', methods: ['POST'])]
-    public function passwordReset(#[MapRequestPayload] ForgotPasswordRestoreRequest $forgotPasswordRestoreRequest, UserService $userService): JsonResponse {
-        $userService->updatePasswordFromToken($forgotPasswordRestoreRequest->token, $forgotPasswordRestoreRequest->newPassword);
+    #[Route('/password/restore', name: 'password_restore', methods: ['POST'])]
+    public function passwordRestore(#[MapRequestPayload] ForgotPasswordRestoreRequest $forgotPasswordRestoreRequest, UserService $userService): JsonResponse {
+        $userService->updatePasswordFromToken($forgotPasswordRestoreRequest);
 
         return $this->json([
             'success' => true,
@@ -53,21 +54,13 @@ final class AuthController extends AbstractController
         ]);
     }
 
-    #[Route('/email/verify/{token}', name: 'email_verify', methods: ['POST'])]
-    public function emailVerify(string $token, UserService $userService): JsonResponse {
-        if ($userService->confirmEmailIfTokenIsValid($token)) {
-            return $this->json([
-                'success' => true,
-                'message' => 'Вы успешно подтвердили свою почту.',
-            ]);
-        } else {
-            $errors['linkNotValid'][] = 'Ссылка подтверждения электронной почты недействительна или срок её действия истёк, повторите попытку.';
+    #[Route('/email/verify/{token}', name: 'email_verify', methods: ['GET'])]
+    public function emailVerify(#[MapRequestPayload] EmailVerifyRequest $emailVerifyRequest, UserService $userService): JsonResponse {
+        $userService->confirmEmailIfTokenIsValid($emailVerifyRequest);
 
-            return $this->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $errors,
-            ], 422);
-        }
+        return $this->json([
+            'success' => true,
+            'message' => 'Вы успешно подтвердили свою почту.',
+        ]);
     }
 }

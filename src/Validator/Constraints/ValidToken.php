@@ -7,5 +7,5 @@ use Symfony\Component\Validator\Constraint;
 #[\Attribute]
 class ValidToken extends Constraint
 {
-    public string $message = 'Ссылка восстановления пароля недействительна или срок её действия истёк, повторите попытку.';
+    public string $message = 'Ссылка недействительна или срок её действия истёк, повторите попытку снова.';
 }
