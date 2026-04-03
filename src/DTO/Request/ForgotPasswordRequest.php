@@ -7,7 +7,7 @@ use App\Validator\Compounds as Compound;
 final readonly class ForgotPasswordRequest
 {
     public function __construct(
-        #[Compound\Email]
+        #[Compound\SavedEmail]
         public string $email
     ){}
 }

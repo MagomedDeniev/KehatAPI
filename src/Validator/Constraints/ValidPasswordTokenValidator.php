@@ -2,27 +2,27 @@
 
 namespace App\Validator\Constraints;
 
-use App\Entity\Token;
-use App\Repository\TokenRepository;
+use App\Entity\User;
+use App\Repository\UserRepository;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 
-final class ValidTokenValidator extends ConstraintValidator
+final class ValidPasswordTokenValidator extends ConstraintValidator
 {
     public function __construct(
-        private readonly TokenRepository $tokenRepository
+        private readonly UserRepository $userRepository
     ) {}
 
     public function validate(mixed $value, Constraint $constraint): void
     {
-        if (!$constraint instanceof ValidToken) {
-            throw new UnexpectedTypeException($constraint, ValidToken::class);
+        if (!$constraint instanceof ValidEmailToken) {
+            throw new UnexpectedTypeException($constraint, ValidEmailToken::class);
         }
 
-        $token = $this->tokenRepository->findOneBy(['token' => $value]);
+        $user = $this->userRepository->findOneBy(['passwordToken' => $value]);
 
-        if (!$token instanceof Token || !$token->isValid()) {
+        if (!$user instanceof User || !$user->tokenIsValid($value, 'password')) {
             $this->context
                 ->buildViolation($constraint->message)
                 ->addViolation()

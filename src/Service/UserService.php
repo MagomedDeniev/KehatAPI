@@ -9,6 +9,7 @@ use App\DTO\Request\RegisterRequest;
 use App\Entity\User;
 use App\Repository\TokenRepository;
 use App\Repository\UserRepository;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -20,9 +21,15 @@ final readonly class UserService
         private EntityManagerInterface      $em,
         private UserRepository              $userRepository,
         private UserPasswordHasherInterface $passwordHasher,
+        private TokenGeneratorInterface     $tokenGenerator,
         private MailerService               $mailerService,
-        private TokenService                $tokenService
+        private int                         $tokenTimeOutSeconds
     ){}
+
+    private function tokenExpiresAt(): DateTimeImmutable
+    {
+        return(new DateTimeImmutable())->modify(sprintf('+%d seconds', $this->tokenTimeOutSeconds));
+    }
 
     /**
      * @throws TransportExceptionInterface
@@ -33,19 +40,16 @@ final readonly class UserService
         $user->setEmail($dto->email);
         $user->setUsername($dto->username);
         $user->setPassword($this->passwordHasher->hashPassword($user, $dto->password));
+        $user->setEmailToken($this->tokenGenerator->generateToken());
+        $user->setEmailTokenExpiresAt($this->tokenExpiresAt());
         $this->em->persist($user);
         $this->em->flush();
-
-        $token = $this->tokenService->createEmailConfirmationToken($user);
 
         $this->mailerService->sendTemplate(
             to: (string) $user->getEmail(),
             subject: 'Подтверждение электронной почты',
             template: 'mailer/registration.html.twig',
-            context: [
-                'user' => $user,
-                'token' => $token,
-            ],
+            context: ['user' => $user]
         );
     }
 
@@ -57,16 +61,15 @@ final readonly class UserService
         $user = $this->userRepository->findOneBy(['email' => $email]);
 
         if ($user instanceof User) {
-            $token = $this->tokenService->createPasswordRecoveryToken($user);
+            $user->setPasswordToken($this->tokenGenerator->generateToken());
+            $user->setPasswordTokenExpiresAt($this->tokenExpiresAt());
+            $this->em->flush();
 
             $this->mailerService->sendTemplate(
                 to: (string) $user->getEmail(),
                 subject: 'Восстановление аккаунта',
                 template: 'mailer/recovery_password.html.twig',
-                context: [
-                    'user' => $user,
-                    'token' => $token,
-                ],
+                context: ['user' => $user]
             );
         }
     }
@@ -79,29 +82,23 @@ final readonly class UserService
         $this->em->flush();
     }
 
-    public function updatePasswordFromUser(User $user, string $plainPassword): void
+    public function updatePassword(User $user, string $plainPassword): void
     {
         $user->setPassword($this->passwordHasher->hashPassword($user, $plainPassword));
         $this->em->flush();
     }
 
-    public function updatePasswordFromToken(ForgotPasswordRestoreRequest $dto): void
+    public function updatePasswordWithToken(ForgotPasswordRestoreRequest $dto): void
     {
-        $token = $this->tokenService->getToken($dto->token);
-        $user = $this->userRepository->findOneBy(['id' => $token->getUserId()]);
+        $user = $this->userRepository->findOneBy(['passwordToken' => $dto->token]);
         $user->setPassword($this->passwordHasher->hashPassword($user, $dto->newPassword));
-        $this->tokenService->removeToken($token, false);
-
         $this->em->flush();
     }
 
-    public function confirmEmailIfTokenIsValid(EmailVerifyRequest $dto): void
+    public function confirmEmailWithToken(EmailVerifyRequest $dto): void
     {
-        $token = $this->tokenService->getToken($dto->token);
-        $user = $this->userRepository->findOneBy(['id' => $token->getUserId()]);
-        $user->setConfirmedEmail($token->getEmail());
-        $this->tokenService->removeToken($token, false);
-
+        $user = $this->userRepository->findOneBy(['emailToken' => $dto->token]);
+        $user->setConfirmedEmail($user->getEmail());
         $this->em->flush();
     }
 }

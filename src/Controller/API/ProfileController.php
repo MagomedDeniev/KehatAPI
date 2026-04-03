@@ -41,7 +41,7 @@ final class ProfileController extends AbstractController
 
     #[Route('/me/password', name: 'change_password', methods: ['PATCH'])]
     public function changePassword(#[CurrentUser] ?User $user, #[MapRequestPayload] ChangePasswordRequest $changePasswordRequest, UserService $userService): JsonResponse {
-        $userService->updatePasswordFromUser($user, $changePasswordRequest->newPassword);
+        $userService->updatePassword($user, $changePasswordRequest->newPassword);
 
         return $this->json([
             'success' => true,

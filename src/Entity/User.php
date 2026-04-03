@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
+use phpDocumentor\Reflection\PseudoTypes\EnumString;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -41,8 +42,43 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private array $roles = [];
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $passwordToken = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $passwordTokenExpiresAt = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $emailToken = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $emailTokenExpiresAt = null;
+
     #[ORM\Column]
     private ?\DateTimeImmutable $registeredAt = null;
+
+    public function tokenIsValid(string $token, string $type): bool
+    {
+        // Определяем, с каким токеном и сроком действия работаем
+        [$storedToken, $storedTokenExpiresAt] = match ($type) {
+            'email' => [$this->emailToken, $this->emailTokenExpiresAt],
+            'password' => [$this->passwordToken, $this->passwordTokenExpiresAt],
+            default => [null, null], // если $type неизвестен — токен сразу невалиден
+        };
+
+        // Если переданный $type пустой, либо у сущности нет токена и/или времени истечения токена
+        if ($storedToken === null || $storedTokenExpiresAt === null) {
+            return false;
+        }
+
+        // Переданный $token пустой или не совпадает с сохраненным
+        if ($token === '' || $storedToken !== $token) {
+            return false;
+        }
+
+        // Если срок не истек — токен валиден
+        return $storedTokenExpiresAt > new \DateTimeImmutable();
+    }
 
     #[ORM\PrePersist]
     public function initialize(): void
@@ -136,5 +172,53 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRegisteredAt(): ?\DateTimeImmutable
     {
         return $this->registeredAt;
+    }
+
+    public function getPasswordToken(): ?string
+    {
+        return $this->passwordToken;
+    }
+
+    public function setPasswordToken(?string $passwordToken): static
+    {
+        $this->passwordToken = $passwordToken;
+
+        return $this;
+    }
+
+    public function getPasswordTokenExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->passwordTokenExpiresAt;
+    }
+
+    public function setPasswordTokenExpiresAt(?\DateTimeImmutable $passwordTokenExpiresAt): static
+    {
+        $this->passwordTokenExpiresAt = $passwordTokenExpiresAt;
+
+        return $this;
+    }
+
+    public function getEmailToken(): ?string
+    {
+        return $this->emailToken;
+    }
+
+    public function setEmailToken(?string $emailToken): static
+    {
+        $this->emailToken = $emailToken;
+
+        return $this;
+    }
+
+    public function getEmailTokenExpiresAt(): ?\DateTimeImmutable
+    {
+        return $this->emailTokenExpiresAt;
+    }
+
+    public function setEmailTokenExpiresAt(?\DateTimeImmutable $emailTokenExpiresAt): static
+    {
+        $this->emailTokenExpiresAt = $emailTokenExpiresAt;
+
+        return $this;
     }
 }

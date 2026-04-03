@@ -3,7 +3,6 @@
 namespace App\DTO\Request;
 
 use App\Validator\Compounds as Compound;
-use Symfony\Component\Validator\Constraints as Assert;
 use App\Validator\Constraints as Constraint;
 
 
@@ -17,7 +16,7 @@ final readonly class ChangePasswordRequest
         #[Compound\Password]
         public string $newPassword,
 
-        #[Assert\NotBlank]
+        #[Compound\RepeatedPassword]
         public string $repeatPassword,
     ){}
 }

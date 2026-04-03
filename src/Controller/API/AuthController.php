@@ -46,7 +46,7 @@ final class AuthController extends AbstractController
 
     #[Route('/password/restore', name: 'password_restore', methods: ['POST'])]
     public function passwordRestore(#[MapRequestPayload] ForgotPasswordRestoreRequest $forgotPasswordRestoreRequest, UserService $userService): JsonResponse {
-        $userService->updatePasswordFromToken($forgotPasswordRestoreRequest);
+        $userService->updatePasswordWithToken($forgotPasswordRestoreRequest);
 
         return $this->json([
             'success' => true,
@@ -56,7 +56,7 @@ final class AuthController extends AbstractController
 
     #[Route('/email/verify', name: 'email_verify', methods: ['POST'])]
     public function emailVerify(#[MapRequestPayload] EmailVerifyRequest $emailVerifyRequest, UserService $userService): JsonResponse {
-        $userService->confirmEmailIfTokenIsValid($emailVerifyRequest);
+        $userService->confirmEmailWithToken($emailVerifyRequest);
 
         return $this->json([
             'success' => true,

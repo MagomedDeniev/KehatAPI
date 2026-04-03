@@ -8,15 +8,15 @@
 
         <h2 style="text-align: center">Подтверждение почты</h2>
 
-        <div class="mailer-mails-box">{% include 'mailer/email_confirmation.html.twig'  with {'user': {'username' : 'deniev', 'email' : 'magomed@deniev.com'}} %}</div>
+        <div class="mailer-mails-box">{% include 'mailer/email_confirmation.html.twig'  with {'user': {'username' : 'deniev', 'email' : 'magomed@deniev.com', 'emailToken' : 'temp', 'passwordToken' : 'temp'}} %}</div>
 
         <h2 style="text-align: center">Приветствие после регистрации</h2>
 
-        <div class="mailer-mails-box">{% include 'mailer/registration.html.twig'  with {'user': {'username' : 'deniev', 'email' : 'magomed@deniev.com'}} %}</div>
+        <div class="mailer-mails-box">{% include 'mailer/registration.html.twig'  with {'user': {'username' : 'deniev', 'email' : 'magomed@deniev.com', 'emailToken' : 'temp', 'passwordToken' : 'temp'}} %}</div>
 
         <h2 style="text-align: center">Восстановления аккаунта</h2>
 
-        <div class="mailer-mails-box">{% include 'mailer/recovery_password.html.twig'  with {'user': {'username' : 'deniev', 'email' : 'magomed@deniev.com'}} %}</div>
+        <div class="mailer-mails-box">{% include 'mailer/recovery_password.html.twig'  with {'user': {'username' : 'deniev', 'email' : 'magomed@deniev.com', 'emailToken' : 'temp', 'passwordToken' : 'temp'}} %}</div>
     </div>
 
 {% endblock %}
