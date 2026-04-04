@@ -16,8 +16,8 @@ final class ValidPasswordTokenValidator extends ConstraintValidator
 
     public function validate(mixed $value, Constraint $constraint): void
     {
-        if (!$constraint instanceof ValidEmailToken) {
-            throw new UnexpectedTypeException($constraint, ValidEmailToken::class);
+        if (!$constraint instanceof ValidPasswordToken) {
+            throw new UnexpectedTypeException($constraint, ValidPasswordToken::class);
         }
 
         $user = $this->userRepository->findOneBy(['passwordToken' => $value]);

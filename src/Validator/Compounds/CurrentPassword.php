@@ -13,7 +13,7 @@ final class CurrentPassword extends Compound
     {
         return [
             new Assert\NotBlank(),
-            new SecurityAssert\UserPassword(message: 'Текущий пароль неверный.')
+            new SecurityAssert\UserPassword(message: 'Current password is incorrect.'),
         ];
     }
 }

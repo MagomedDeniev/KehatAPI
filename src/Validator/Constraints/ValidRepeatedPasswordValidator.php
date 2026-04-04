@@ -2,11 +2,9 @@
 
 namespace App\Validator\Constraints;
 
-use App\DTO\Request\ForgotPasswordRestoreRequest;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
-use Symfony\Component\Validator\Exception\UnexpectedValueException;
 
 final class ValidRepeatedPasswordValidator extends ConstraintValidator
 {

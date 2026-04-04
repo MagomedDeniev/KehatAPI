@@ -7,7 +7,7 @@ use Symfony\Component\Validator\Constraint;
 #[\Attribute]
 class ValidRepeatedPassword extends Constraint
 {
-    public string $message = 'Пароли не совпадают.';
+    public string $message = 'Passwords do not match.';
 
     public function getTargets(): string
     {

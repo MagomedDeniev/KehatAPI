@@ -42,7 +42,7 @@ final class MailerService
         try {
             $this->mailer->send($email);
         } catch (TransportExceptionInterface $e) {
-            $this->logger->error('Не удалось отправить email', [
+            $this->logger->error('Failed to send email.', [
                 'to' => (string)$to,
                 'subject' => $subject,
                 'template' => $template,

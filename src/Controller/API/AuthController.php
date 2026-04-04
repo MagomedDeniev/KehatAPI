@@ -26,7 +26,7 @@ final class AuthController extends AbstractController
 
         return $this->json([
             'success' => true,
-            'message' => 'Пользователь зарегистрирован. Подтвердите почту.',
+            'message' => 'User successfully registered, check your email for further instructions.',
         ], 201);
     }
 
@@ -40,7 +40,7 @@ final class AuthController extends AbstractController
 
         return $this->json([
             'success' => true,
-            'message' => 'Если почта верна, то на нее будет отправлено письмо для восстановления пароля.',
+            'message' => 'If email is valid, you will receive a link to reset your password.',
         ]);
     }
 
@@ -50,7 +50,7 @@ final class AuthController extends AbstractController
 
         return $this->json([
             'success' => true,
-            'message' => 'Ваш пароль изменен, можете войти в аккаунт используя новый пароль.',
+            'message' => 'Your password has been restored, you can login now.',
         ]);
     }
 
@@ -60,7 +60,7 @@ final class AuthController extends AbstractController
 
         return $this->json([
             'success' => true,
-            'message' => 'Вы успешно подтвердили свою почту.',
+            'message' => 'Your email has been verified.',
         ]);
     }
 }

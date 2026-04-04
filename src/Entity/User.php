@@ -3,9 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
-use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
-use phpDocumentor\Reflection\PseudoTypes\EnumString;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -78,6 +76,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         // Если срок не истек — токен валиден
         return $storedTokenExpiresAt > new \DateTimeImmutable();
+    }
+
+    public function clearToken(string $type): void
+    {
+        if ($type === 'email') {
+            $this->emailToken = null;
+            $this->emailTokenExpiresAt = null;
+        } elseif ($type === 'password') {
+            $this->passwordToken = null;
+            $this->passwordTokenExpiresAt = null;
+        }
     }
 
     #[ORM\PrePersist]

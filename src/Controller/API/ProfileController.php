@@ -9,9 +9,9 @@ use App\Service\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api', name: 'api_profile_')]
 final class ProfileController extends AbstractController
@@ -28,15 +28,25 @@ final class ProfileController extends AbstractController
         ]);
     }
 
+    /**
+     * @throws TransportExceptionInterface
+     */
     #[Route('/me', name: 'change_me', methods: ['PATCH'])]
     public function changeMe(#[CurrentUser] User $user, #[MapRequestPayload] ChangeMeRequest $changeMeRequest, UserService $userService): JsonResponse
     {
-        $userService->updateProfile($user, $changeMeRequest);
+        if ($user->getEmail() === $user->getConfirmedEmail()) {
+            $userService->updateProfile($user, $changeMeRequest);
 
-        return $this->json([
-            'success' => true,
-            'message' => 'Profile updated successfully',
-        ]);
+            return $this->json([
+                'success' => true,
+                'message' => 'Profile updated successfully',
+            ]);
+        } else {
+            return $this->json([
+                'success' => false,
+                'message' => 'You can\'t update your profile if email is not confirmed',
+            ]);
+        }
     }
 
     #[Route('/me/password', name: 'change_password', methods: ['PATCH'])]

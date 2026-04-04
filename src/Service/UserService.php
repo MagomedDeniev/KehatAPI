@@ -7,7 +7,6 @@ use App\DTO\Request\EmailVerifyRequest;
 use App\DTO\Request\ForgotPasswordRestoreRequest;
 use App\DTO\Request\RegisterRequest;
 use App\Entity\User;
-use App\Repository\TokenRepository;
 use App\Repository\UserRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
@@ -31,14 +30,24 @@ final readonly class UserService
         return(new DateTimeImmutable())->modify(sprintf('+%d seconds', $this->tokenTimeOutSeconds));
     }
 
+    private function normalizeEmail(string $email): string
+    {
+        return mb_strtolower(trim($email));
+    }
+
+    private function normalizeUsername(string $username): string
+    {
+        return trim($username);
+    }
+
     /**
      * @throws TransportExceptionInterface
      */
     public function register(RegisterRequest $dto): void
     {
         $user = new User();
-        $user->setEmail($dto->email);
-        $user->setUsername($dto->username);
+        $user->setEmail($this->normalizeEmail($dto->email));
+        $user->setUsername($this->normalizeUsername($dto->username));
         $user->setPassword($this->passwordHasher->hashPassword($user, $dto->password));
         $user->setEmailToken($this->tokenGenerator->generateToken());
         $user->setEmailTokenExpiresAt($this->tokenExpiresAt());
@@ -47,7 +56,7 @@ final readonly class UserService
 
         $this->mailerService->sendTemplate(
             to: (string) $user->getEmail(),
-            subject: 'Подтверждение электронной почты',
+            subject: 'Welcome message',
             template: 'mailer/registration.html.twig',
             context: ['user' => $user]
         );
@@ -67,19 +76,37 @@ final readonly class UserService
 
             $this->mailerService->sendTemplate(
                 to: (string) $user->getEmail(),
-                subject: 'Восстановление аккаунта',
+                subject: 'Account recovery',
                 template: 'mailer/recovery_password.html.twig',
                 context: ['user' => $user]
             );
         }
     }
 
+    /**
+     * @throws TransportExceptionInterface
+     */
     public function updateProfile(User $user, ChangeMeRequest $dto): void
     {
-        $user->setUsername($dto->username);
-        $user->setEmail($dto->email);
+        $emailIsNotConfirmed = $user->getConfirmedEmail() !== $this->normalizeEmail($dto->email);
 
+        if ($emailIsNotConfirmed) {
+            $user->setEmailToken($this->tokenGenerator->generateToken());
+            $user->setEmailTokenExpiresAt($this->tokenExpiresAt());
+        }
+
+        $user->setUsername($this->normalizeUsername($dto->username));
+        $user->setEmail($this->normalizeEmail($dto->email));
         $this->em->flush();
+
+        if ($emailIsNotConfirmed) {
+            $this->mailerService->sendTemplate(
+                to: (string) $user->getEmail(),
+                subject: 'Email verification',
+                template: 'mailer/email_confirmation.html.twig',
+                context: ['user' => $user]
+            );
+        }
     }
 
     public function updatePassword(User $user, string $plainPassword): void
@@ -92,6 +119,7 @@ final readonly class UserService
     {
         $user = $this->userRepository->findOneBy(['passwordToken' => $dto->token]);
         $user->setPassword($this->passwordHasher->hashPassword($user, $dto->newPassword));
+        $user->clearToken('password');
         $this->em->flush();
     }
 
@@ -99,6 +127,7 @@ final readonly class UserService
     {
         $user = $this->userRepository->findOneBy(['emailToken' => $dto->token]);
         $user->setConfirmedEmail($user->getEmail());
+        $user->clearToken('email');
         $this->em->flush();
     }
 }
