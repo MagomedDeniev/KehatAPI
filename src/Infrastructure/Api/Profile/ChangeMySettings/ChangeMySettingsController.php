@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Infrastructure\Api\Profile\ChangeMySettings;
+
+use App\Application\Profile\ChangeMySettings\ChangeMySettingsCommand;
+use App\Application\Profile\ChangeMySettings\ChangeMySettingsHandler;
+use App\Infrastructure\Doctrine\Entity\User;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
+
+final class ChangeMySettingsController extends AbstractController
+{
+    /**
+     * @throws TransportExceptionInterface
+     */
+    #[Route('/api/me/settings', name: 'api_change_my_settings', methods: ['PATCH'])]
+    public function changeMySettings(#[CurrentUser] User $user, #[MapRequestPayload] ChangeMySettingsRequest $changeMeRequest, ChangeMySettingsHandler $handler): JsonResponse
+    {
+        $result = $handler(new ChangeMySettingsCommand(
+            userId: $user->getId(),
+            username: $changeMeRequest->username,
+            email: $changeMeRequest->email,
+        ));
+
+        return $this->json([
+            'success' => true,
+            'data' => [],
+            'message' => $result->message,
+        ], 201);
+    }
+}

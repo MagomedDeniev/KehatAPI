@@ -8,7 +8,7 @@ security:
         # used to reload user from session & other features (e.g. switch_user)
         app_user_provider:
             entity:
-                class: App\Entity\User
+                class: App\Infrastructure\Doctrine\Entity\User
                 property: email
 
     firewalls:
@@ -51,9 +51,9 @@ security:
     access_control:
         - { path: ^/api/login_check$, roles: PUBLIC_ACCESS }
         - { path: ^/api/register$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/password/forgot$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/password/restore$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/email/verify$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/forgot/password$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/restore/password$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/confirm/email$, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: ROLE_USER }
 
 when@test:
