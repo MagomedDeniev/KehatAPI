@@ -4,30 +4,28 @@ declare(strict_types=1);
 
 namespace App\Application\Auth\RestorePassword;
 
-use App\Infrastructure\Doctrine\Repository\UserRepository;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use App\Application\Contract\PasswordHasherInterface;
+use App\Domain\Entity\DomainUser;
+use App\Domain\Repository\DomainUserRepositoryInterface;
 
 final readonly class RestorePasswordHandler
 {
     public function __construct(
-        private EntityManagerInterface $em,
-        private UserPasswordHasherInterface $passwordHasher,
-        private UserRepository $userRepository,
+        private PasswordHasherInterface $passwordHasher,
+        private DomainUserRepositoryInterface $domainUserRepository,
     ) {
     }
 
     public function __invoke(RestorePasswordCommand $command): RestorePasswordResult
     {
-        $user = $this->userRepository->findOneBy(['passwordToken' => $command->token]);
+        $user = $this->domainUserRepository->findUserBy(['passwordToken' => $command->token]);
 
-        if (null === $user) {
+        if (!$user instanceof DomainUser) {
             throw new \DomainException('Invalid password reset token.');
         }
 
-        $user->setPassword($this->passwordHasher->hashPassword($user, $command->password));
-        $user->clearToken('password');
-        $this->em->flush();
+        $user->restorePassword($this->passwordHasher->hash($command->password));
+        $this->domainUserRepository->saveDomainUser($user);
 
         return new RestorePasswordResult(
             userId: (int) $user->getId(),

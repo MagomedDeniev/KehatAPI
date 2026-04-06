@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Profile\ChangeMyPassword;
+namespace App\Application\Account\ChangeMyPassword;
 
 final readonly class ChangeMyPasswordCommand
 {

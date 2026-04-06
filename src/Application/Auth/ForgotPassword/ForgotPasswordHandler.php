@@ -4,20 +4,17 @@ declare(strict_types=1);
 
 namespace App\Application\Auth\ForgotPassword;
 
+use App\Domain\Entity\DomainUser;
+use App\Domain\Repository\DomainUserRepositoryInterface;
 use App\Domain\ValueObject\TokenExpirationTime;
-use App\Infrastructure\Doctrine\Entity\User;
-use App\Infrastructure\Doctrine\Repository\UserRepository;
 use App\Infrastructure\Service\MailerService;
-use Doctrine\DBAL\Exception;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Security\Csrf\TokenGenerator\TokenGeneratorInterface;
 
 final readonly class ForgotPasswordHandler
 {
     public function __construct(
-        private EntityManagerInterface $em,
-        private UserRepository $userRepository,
+        private DomainUserRepositoryInterface $domainUserRepository,
         private TokenGeneratorInterface $tokenGenerator,
         private MailerService $mailerService,
     ) {
@@ -25,36 +22,24 @@ final readonly class ForgotPasswordHandler
 
     /**
      * @throws TransportExceptionInterface
-     * @throws Exception|\Throwable
      */
     public function __invoke(ForgotPasswordCommand $command): ForgotPasswordResult
     {
-        $user = $this->userRepository->findOneBy(['email' => $command->email]);
+        $user = $this->domainUserRepository->findUserBy(['email' => $command->email]);
 
-        if ($user instanceof User) {
+        if ($user instanceof DomainUser) {
             $tokenExpiresAt = new TokenExpirationTime();
 
-            $user->setPasswordToken($this->tokenGenerator->generateToken());
-            $user->setPasswordTokenExpiresAt($tokenExpiresAt->value());
+            $user->assignPasswordToken($this->tokenGenerator->generateToken(), $tokenExpiresAt->value());
 
-            $connection = $this->em->getConnection();
-            $connection->beginTransaction();
+            $this->domainUserRepository->saveDomainUser($user);
 
-            try {
-                $this->em->flush();
-
-                $this->mailerService->sendTemplate(
-                    to: $user->getEmail(),
-                    subject: 'Account recovery',
-                    template: 'mailer/recovery_password.html.twig',
-                    context: ['user' => $user]
-                );
-
-                $connection->commit();
-            } catch (\Throwable $e) {
-                $connection->rollBack();
-                throw $e;
-            }
+            $this->mailerService->sendTemplate(
+                to: $user->getEmail(),
+                subject: 'Account recovery',
+                template: 'mailer/recovery_password.html.twig',
+                context: ['user' => $user]
+            );
         }
 
         return new ForgotPasswordResult(

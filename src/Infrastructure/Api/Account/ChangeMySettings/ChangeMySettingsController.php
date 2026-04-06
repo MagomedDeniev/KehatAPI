@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Api\Profile\ChangeMySettings;
+namespace App\Infrastructure\Api\Account\ChangeMySettings;
 
-use App\Application\Profile\ChangeMySettings\ChangeMySettingsCommand;
-use App\Application\Profile\ChangeMySettings\ChangeMySettingsHandler;
+use App\Application\Account\ChangeMySettings\ChangeMySettingsCommand;
+use App\Application\Account\ChangeMySettings\ChangeMySettingsHandler;
 use App\Infrastructure\Doctrine\Entity\User;
 use Doctrine\DBAL\Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

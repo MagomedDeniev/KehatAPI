@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Validator\Constraints;
 
+use App\Infrastructure\Api\Account\ChangeMySettings\ChangeMySettingsRequest;
 use App\Infrastructure\Api\Auth\Register\RegisterRequest;
-use App\Infrastructure\Api\Profile\ChangeMySettings\ChangeMySettingsRequest;
 use App\Infrastructure\Doctrine\Repository\UserRepository;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\User\UserInterface;

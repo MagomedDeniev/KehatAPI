@@ -4,28 +4,30 @@ declare(strict_types=1);
 
 namespace App\Application\Auth\ConfirmEmail;
 
-use App\Infrastructure\Doctrine\Repository\UserRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Domain\Entity\DomainUser;
+use App\Domain\Repository\DomainUserRepositoryInterface;
 
 final readonly class ConfirmEmailHandler
 {
     public function __construct(
-        private EntityManagerInterface $em,
-        private UserRepository $userRepository,
+        private DomainUserRepositoryInterface $domainUserRepository,
     ) {
     }
 
     public function __invoke(ConfirmEmailCommand $command): ConfirmEmailResult
     {
-        $user = $this->userRepository->findOneBy(['emailToken' => $command->token]);
+        $user = $this->domainUserRepository->findUserBy(['emailToken' => $command->token]);
 
-        if (null === $user) {
+        if (!$user instanceof DomainUser) {
             throw new \DomainException('Invalid email confirmation token.');
         }
 
-        $user->setConfirmedEmail($user->getEmail());
-        $user->clearToken('email');
-        $this->em->flush();
+        if (!$user->emailTokenIsValid($command->token)) {
+            throw new \DomainException('Email confirmation token is invalid or expired.');
+        }
+
+        $user->confirmEmail();
+        $this->domainUserRepository->saveDomainUser($user);
 
         return new ConfirmEmailResult(
             email: $user->getEmail(),

@@ -6,16 +6,11 @@ namespace App\Infrastructure\Doctrine\Entity;
 
 use App\Infrastructure\Doctrine\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
-#[ORM\HasLifecycleCallbacks]
-#[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
-#[UniqueEntity(fields: ['username'], message: 'There is already an account with this username')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -23,8 +18,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?int $id = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Email]
     #[ORM\Column(length: 180, unique: true)]
     private string $email;
 
@@ -34,8 +27,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private string $password;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 6, max: 180)]
     #[ORM\Column(length: 180, unique: true)]
     private string $username;
 
@@ -81,23 +72,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $storedTokenExpiresAt > new \DateTimeImmutable();
     }
 
-    public function clearToken(string $type): void
-    {
-        if ('email' === $type) {
-            $this->emailToken = null;
-            $this->emailTokenExpiresAt = null;
-        } elseif ('password' === $type) {
-            $this->passwordToken = null;
-            $this->passwordTokenExpiresAt = null;
-        }
-    }
-
-    #[ORM\PrePersist]
-    public function initialize(): void
-    {
-        $this->registeredAt = new \DateTimeImmutable();
-    }
-
     public function getId(): ?int
     {
         return $this->id;
@@ -127,7 +101,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getPassword(): ?string
+    public function getPassword(): string
     {
         return $this->password;
     }
@@ -139,7 +113,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getUsername(): ?string
+    public function getUsername(): string
     {
         return $this->username;
     }
@@ -160,12 +134,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->email;
     }
 
+    /**
+     * @return list<string>
+     */
     public function getRoles(): array
     {
         $roles = $this->roles;
         $roles[] = 'ROLE_USER';
 
-        return array_unique($roles);
+        return array_values(array_unique($roles));
     }
 
     /**
@@ -190,9 +167,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
     }
 
-    public function getRegisteredAt(): ?\DateTimeImmutable
+    public function getRegisteredAt(): \DateTimeImmutable
     {
         return $this->registeredAt;
+    }
+
+    public function setRegisteredAt(\DateTimeImmutable $registeredAt): static
+    {
+        $this->registeredAt = $registeredAt;
+
+        return $this;
     }
 
     public function getPasswordToken(): ?string

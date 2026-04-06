@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Api\Profile\ChangeMySettings;
+namespace App\Infrastructure\Api\Account\ChangeMySettings;
 
 use App\Infrastructure\Validator\Compounds as Compound;
 use App\Infrastructure\Validator\Constraints as Constraint;

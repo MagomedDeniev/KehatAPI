@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Api\Profile\ChangeMyPassword;
+namespace App\Infrastructure\Api\Account\ChangeMyPassword;
 
 use App\Infrastructure\Validator\Compounds as Compound;
 use App\Infrastructure\Validator\Constraints as Constraint;

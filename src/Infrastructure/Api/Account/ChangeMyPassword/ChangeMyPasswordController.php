@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Api\Profile\ChangeMyPassword;
+namespace App\Infrastructure\Api\Account\ChangeMyPassword;
 
-use App\Application\Profile\ChangeMyPassword\ChangeMyPasswordCommand;
-use App\Application\Profile\ChangeMyPassword\ChangeMyPasswordHandler;
+use App\Application\Account\ChangeMyPassword\ChangeMyPasswordCommand;
+use App\Application\Account\ChangeMyPassword\ChangeMyPasswordHandler;
 use App\Infrastructure\Doctrine\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;

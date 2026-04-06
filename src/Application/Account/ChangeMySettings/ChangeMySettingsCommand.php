@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Profile\ChangeMySettings;
+namespace App\Application\Account\ChangeMySettings;
 
 final readonly class ChangeMySettingsCommand
 {

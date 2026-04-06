@@ -4,22 +4,21 @@ declare(strict_types=1);
 
 namespace App\Application\Auth\Register;
 
+use App\Application\Contract\PasswordHasherInterface;
+use App\Domain\Entity\DomainUser;
+use App\Domain\Repository\DomainUserRepositoryInterface;
 use App\Domain\ValueObject\Email;
 use App\Domain\ValueObject\TokenExpirationTime;
 use App\Domain\ValueObject\Username;
-use App\Infrastructure\Doctrine\Entity\User;
 use App\Infrastructure\Service\MailerService;
-use Doctrine\DBAL\Exception;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Csrf\TokenGenerator\TokenGeneratorInterface;
 
 final readonly class RegisterHandler
 {
     public function __construct(
-        private EntityManagerInterface $em,
-        private UserPasswordHasherInterface $passwordHasher,
+        private DomainUserRepositoryInterface $domainUserRepository,
+        private PasswordHasherInterface $passwordHasher,
         private TokenGeneratorInterface $tokenGenerator,
         private MailerService $mailer,
     ) {
@@ -27,7 +26,6 @@ final readonly class RegisterHandler
 
     /**
      * @throws TransportExceptionInterface
-     * @throws Exception|\Throwable
      */
     public function __invoke(RegisterCommand $command): RegisterResult
     {
@@ -35,35 +33,25 @@ final readonly class RegisterHandler
         $username = new Username($command->username);
         $tokenExpiresAt = new TokenExpirationTime();
 
-        $user = new User();
-        $user->setEmail($email->value());
-        $user->setUsername($username->value());
-        $user->setPassword($this->passwordHasher->hashPassword($user, $command->plainPassword));
-        $user->setEmailToken($this->tokenGenerator->generateToken());
-        $user->setEmailTokenExpiresAt($tokenExpiresAt->value());
+        $user = DomainUser::register(
+            email: $email->value(),
+            password: $this->passwordHasher->hash($command->plainPassword),
+            username: $username->value(),
+            emailToken: $this->tokenGenerator->generateToken(),
+            emailTokenExpiresAt: $tokenExpiresAt->value(),
+        );
 
-        $connection = $this->em->getConnection();
-        $connection->beginTransaction();
+        $user = $this->domainUserRepository->saveDomainUser($user);
 
-        try {
-            $this->em->persist($user);
-            $this->em->flush();
-
-            $this->mailer->sendTemplate(
-                to: $user->getEmail(),
-                subject: 'Welcome message',
-                template: 'mailer/registration.html.twig',
-                context: ['user' => $user],
-            );
-
-            $connection->commit();
-        } catch (\Throwable $e) {
-            $connection->rollBack();
-            throw $e;
-        }
+        $this->mailer->sendTemplate(
+            to: $user->getEmail(),
+            subject: 'Welcome message',
+            template: 'mailer/registration.html.twig',
+            context: ['user' => $user],
+        );
 
         return new RegisterResult(
-            userId: (int) $user->getId(),
+            userId: $user->getId() ?? throw new \LogicException('Registered user must have id.'),
             email: $user->getEmail(),
             message: 'User successfully registered, check your email for further instructions.',
         );

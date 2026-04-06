@@ -7,10 +7,9 @@ $finder = (new PhpCsFixer\Finder())
         __DIR__ . '/config',
     ])
     ->exclude('var')
-    ->notPath([
-        'config/bundles.php',
-        'config/reference.php',
-    ]);
+    ->notPath('reference.php')
+    ->notPath('bundles.php')
+    ;
 
 return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)

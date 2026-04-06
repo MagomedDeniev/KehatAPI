@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Api\Profile\ShowMyProfile;
+namespace App\Infrastructure\Api\Account\ShowMyProfile;
 
 use App\Infrastructure\Doctrine\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,7 +21,7 @@ final class ShowMyProfileController extends AbstractController
             'email' => $user->getEmail(),
             'username' => $user->getUsername(),
             'roles' => $user->getRoles(),
-            'registeredAt' => $user->getRegisteredAt()?->format(DATE_ATOM),
+            'registeredAt' => $user->getRegisteredAt()->format(DATE_ATOM),
         ]);
     }
 }

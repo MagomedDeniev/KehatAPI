@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Profile\ChangeMySettings;
+namespace App\Application\Account\ChangeMyPassword;
 
-final readonly class ChangeMySettingsResult
+final readonly class ChangeMyPasswordResult
 {
     public function __construct(
         public string $message,
