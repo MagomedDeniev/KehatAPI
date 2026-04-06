@@ -74,7 +74,9 @@
         ],
         "stan": "vendor/bin/phpstan analyse --memory-limit=1G",
         "fixer-try": "vendor/bin/php-cs-fixer fix --dry-run --diff",
-        "fixer": "vendor/bin/php-cs-fixer fix"
+        "fixer": "vendor/bin/php-cs-fixer fix",
+        "rector-try": "vendor/bin/rector process --dry-run",
+        "rector": "vendor/bin/rector process"
     },
     "conflict": {
         "symfony/symfony": "*"
@@ -92,6 +94,7 @@
         "phpstan/phpstan-doctrine": "^2.0",
         "phpstan/phpstan-symfony": "^2.0",
         "phpunit/phpunit": "^13.0",
+        "rector/rector": "^2.4",
         "symfony/browser-kit": "7.4.*",
         "symfony/css-selector": "7.4.*",
         "symfony/maker-bundle": "^1.67",

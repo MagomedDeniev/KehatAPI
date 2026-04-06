@@ -68,7 +68,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         };
 
         // Если переданный $type пустой, либо у сущности нет токена и/или времени истечения токена
-        if (null === $storedToken || null === $storedTokenExpiresAt) {
+        if (null === $storedToken || !$storedTokenExpiresAt instanceof \DateTimeImmutable) {
             return false;
         }
 

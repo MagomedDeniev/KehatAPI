@@ -67,7 +67,7 @@ final class ApiExceptionSubscriber implements EventSubscriberInterface
 
         $previous = $exception->getPrevious();
 
-        while (null !== $previous) {
+        while ($previous instanceof \Throwable) {
             if ($previous instanceof ValidationFailedException) {
                 return $previous;
             }

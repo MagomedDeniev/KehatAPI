@@ -50,7 +50,7 @@ final readonly class RegisterHandler
             $this->em->flush();
 
             $this->mailer->sendTemplate(
-                to: (string) $user->getEmail(),
+                to: $user->getEmail(),
                 subject: 'Welcome message',
                 template: 'mailer/registration.html.twig',
                 context: ['user' => $user],
@@ -64,7 +64,7 @@ final readonly class RegisterHandler
 
         return new RegisterResult(
             userId: (int) $user->getId(),
-            email: (string) $user->getEmail(),
+            email: $user->getEmail(),
             message: 'User successfully registered, check your email for further instructions.',
         );
     }

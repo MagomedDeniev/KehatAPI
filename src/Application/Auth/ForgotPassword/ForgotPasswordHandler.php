@@ -44,7 +44,7 @@ final readonly class ForgotPasswordHandler
                 $this->em->flush();
 
                 $this->mailerService->sendTemplate(
-                    to: (string) $user->getEmail(),
+                    to: $user->getEmail(),
                     subject: 'Account recovery',
                     template: 'mailer/recovery_password.html.twig',
                     context: ['user' => $user]

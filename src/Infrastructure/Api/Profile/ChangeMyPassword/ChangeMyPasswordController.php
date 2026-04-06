@@ -18,7 +18,7 @@ final class ChangeMyPasswordController extends AbstractController
     #[Route('/api/me/password', name: 'api_change_password', methods: ['PATCH'])]
     public function changePassword(#[CurrentUser] ?User $user, #[MapRequestPayload] ChangeMyPasswordRequest $changePasswordRequest, ChangeMyPasswordHandler $handler): JsonResponse
     {
-        if (null === $user || null === $user->getId()) {
+        if (!$user instanceof User || null === $user->getId()) {
             throw $this->createAccessDeniedException('User is not authenticated or not have id.');
         }
 

@@ -8,6 +8,7 @@ use App\Infrastructure\Api\Auth\Register\RegisterRequest;
 use App\Infrastructure\Api\Profile\ChangeMySettings\ChangeMySettingsRequest;
 use App\Infrastructure\Doctrine\Repository\UserRepository;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -37,7 +38,7 @@ final class UniqueUserCredentialsValidator extends ConstraintValidator
         if ($value instanceof ChangeMySettingsRequest) {
             $currentSecurityUser = $this->security->getUser();
 
-            if (null === $currentSecurityUser) {
+            if (!$currentSecurityUser instanceof UserInterface) {
                 return;
             }
 
