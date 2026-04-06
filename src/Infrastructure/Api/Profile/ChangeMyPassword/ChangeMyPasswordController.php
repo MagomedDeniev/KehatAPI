@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Api\Profile\ChangeMyPassword;
 
 use App\Application\Profile\ChangeMyPassword\ChangeMyPasswordCommand;
@@ -14,8 +16,9 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class ChangeMyPasswordController extends AbstractController
 {
     #[Route('/api/me/password', name: 'api_change_password', methods: ['PATCH'])]
-    public function changePassword(#[CurrentUser] ?User $user, #[MapRequestPayload] ChangeMyPasswordRequest $changePasswordRequest, ChangeMyPasswordHandler $handler): JsonResponse {
-        if ($user === null || $user->getId() === null) {
+    public function changePassword(#[CurrentUser] ?User $user, #[MapRequestPayload] ChangeMyPasswordRequest $changePasswordRequest, ChangeMyPasswordHandler $handler): JsonResponse
+    {
+        if (null === $user || null === $user->getId()) {
             throw $this->createAccessDeniedException('User is not authenticated or not have id.');
         }
 

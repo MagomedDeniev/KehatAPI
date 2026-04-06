@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Application\Auth\ConfirmEmail;
 
 use App\Infrastructure\Doctrine\Repository\UserRepository;
@@ -9,14 +11,15 @@ final readonly class ConfirmEmailHandler
 {
     public function __construct(
         private EntityManagerInterface $em,
-        private UserRepository $userRepository
-    ) {}
+        private UserRepository $userRepository,
+    ) {
+    }
 
     public function __invoke(ConfirmEmailCommand $command): ConfirmEmailResult
     {
         $user = $this->userRepository->findOneBy(['emailToken' => $command->token]);
 
-        if ($user === null) {
+        if (null === $user) {
             throw new \DomainException('Invalid email confirmation token.');
         }
 

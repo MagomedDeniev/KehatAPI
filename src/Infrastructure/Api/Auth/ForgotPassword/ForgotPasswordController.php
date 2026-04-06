@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Api\Auth\ForgotPassword;
 
 use App\Application\Auth\ForgotPassword\ForgotPasswordCommand;
@@ -10,13 +12,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Throwable;
 
 final class ForgotPasswordController extends AbstractController
 {
-
     /**
-     * @throws Throwable
+     * @throws \Throwable
      * @throws TransportExceptionInterface
      * @throws Exception
      */

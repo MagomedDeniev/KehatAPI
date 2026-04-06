@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Application\Auth\Register;
 
 final readonly class RegisterResult
@@ -8,5 +10,6 @@ final readonly class RegisterResult
         public int $userId,
         public string $email,
         public string $message,
-    ) {}
+    ) {
+    }
 }

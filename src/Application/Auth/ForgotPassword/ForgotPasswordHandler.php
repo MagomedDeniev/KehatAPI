@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Application\Auth\ForgotPassword;
 
 use App\Domain\ValueObject\TokenExpirationTime;
@@ -10,7 +12,6 @@ use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Security\Csrf\TokenGenerator\TokenGeneratorInterface;
-use Throwable;
 
 final readonly class ForgotPasswordHandler
 {
@@ -18,13 +19,13 @@ final readonly class ForgotPasswordHandler
         private EntityManagerInterface $em,
         private UserRepository $userRepository,
         private TokenGeneratorInterface $tokenGenerator,
-        private MailerService $mailerService
+        private MailerService $mailerService,
     ) {
     }
 
     /**
      * @throws TransportExceptionInterface
-     * @throws Exception|Throwable
+     * @throws Exception|\Throwable
      */
     public function __invoke(ForgotPasswordCommand $command): ForgotPasswordResult
     {
@@ -50,7 +51,7 @@ final readonly class ForgotPasswordHandler
                 );
 
                 $connection->commit();
-            } catch (Throwable $e) {
+            } catch (\Throwable $e) {
                 $connection->rollBack();
                 throw $e;
             }

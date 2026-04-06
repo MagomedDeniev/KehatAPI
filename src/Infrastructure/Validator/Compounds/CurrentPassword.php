@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Validator\Compounds;
 
 use Symfony\Component\Security\Core\Validator\Constraints as SecurityAssert;

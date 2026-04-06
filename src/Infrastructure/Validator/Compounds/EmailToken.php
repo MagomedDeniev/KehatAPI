@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Validator\Compounds;
 
 use App\Domain\Rules\UserRules;
@@ -15,7 +17,7 @@ final class EmailToken extends Compound
         return [
             new Assert\NotBlank(),
             new Assert\Length(min: UserRules::TOKEN_MIN, max: UserRules::TOKEN_MAX),
-            new Constraint\ValidEmailToken()
+            new Constraint\ValidEmailToken(),
         ];
     }
 }

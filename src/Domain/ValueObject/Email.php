@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Domain\ValueObject;
 
 use App\Domain\Rules\UserRules;
-use InvalidArgumentException;
 
 final readonly class Email
 {
@@ -15,16 +16,12 @@ final readonly class Email
         $normalized = self::normalize($value);
 
         // Проверяем, что строка не пустая и похожа на email.
-        if (filter_var($normalized, FILTER_VALIDATE_EMAIL) === false || $value === '') {
+        if (false === filter_var($normalized, FILTER_VALIDATE_EMAIL) || '' === $value) {
             throw new \InvalidArgumentException('Email is not valid.');
         }
 
         if (mb_strlen($normalized) < UserRules::EMAIL_MIN || mb_strlen($normalized) > UserRules::EMAIL_MAX) {
-            throw new InvalidArgumentException(sprintf(
-                'Email length must be between %d and %d characters.',
-                UserRules::EMAIL_MIN,
-                UserRules::EMAIL_MAX,
-            ));
+            throw new \InvalidArgumentException(sprintf('Email length must be between %d and %d characters.', UserRules::EMAIL_MIN, UserRules::EMAIL_MAX));
         }
 
         $this->value = $normalized;

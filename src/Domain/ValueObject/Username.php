@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Domain\ValueObject;
 
 use App\Domain\Rules\UserRules;
-use InvalidArgumentException;
 
 final readonly class Username
 {
@@ -15,20 +16,16 @@ final readonly class Username
         $normalized = self::normalize($value);
 
         // Проверяем длину.
-        if ($normalized === '') {
-            throw new InvalidArgumentException('Username cannot be blank.');
+        if ('' === $normalized) {
+            throw new \InvalidArgumentException('Username cannot be blank.');
         }
 
         if (mb_strlen($normalized) < UserRules::USERNAME_MIN || mb_strlen($normalized) > UserRules::USERNAME_MAX) {
-            throw new InvalidArgumentException(sprintf(
-                'Username length must be between %d and %d characters.',
-                UserRules::USERNAME_MIN,
-                UserRules::USERNAME_MAX,
-            ));
+            throw new \InvalidArgumentException(sprintf('Username length must be between %d and %d characters.', UserRules::USERNAME_MIN, UserRules::USERNAME_MAX));
         }
 
         if (!preg_match(UserRules::USERNAME_PATTERN, $normalized)) {
-            throw new InvalidArgumentException('Username can contain only letters, numbers, dots, and underscores.');
+            throw new \InvalidArgumentException('Username can contain only letters, numbers, dots, and underscores.');
         }
 
         $this->value = $normalized;

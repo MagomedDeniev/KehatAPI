@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Application\Auth\RestorePassword;
 
 use App\Infrastructure\Doctrine\Repository\UserRepository;
@@ -11,14 +13,15 @@ final readonly class RestorePasswordHandler
     public function __construct(
         private EntityManagerInterface $em,
         private UserPasswordHasherInterface $passwordHasher,
-        private UserRepository $userRepository
-    ) {}
+        private UserRepository $userRepository,
+    ) {
+    }
 
     public function __invoke(RestorePasswordCommand $command): RestorePasswordResult
     {
         $user = $this->userRepository->findOneBy(['passwordToken' => $command->token]);
 
-        if ($user === null) {
+        if (null === $user) {
             throw new \DomainException('Invalid password reset token.');
         }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Api\Auth\ConfirmEmail;
 
 use App\Application\Auth\ConfirmEmail\ConfirmEmailCommand;
@@ -12,7 +14,8 @@ use Symfony\Component\Routing\Attribute\Route;
 final class ConfirmEmailController extends AbstractController
 {
     #[Route('/api/confirm/email', name: 'api_confirm_email', methods: ['POST'])]
-    public function confirmEmail(#[MapRequestPayload] ConfirmEmailRequest $confirmEmailRequest, ConfirmEmailHandler $handler): JsonResponse {
+    public function confirmEmail(#[MapRequestPayload] ConfirmEmailRequest $confirmEmailRequest, ConfirmEmailHandler $handler): JsonResponse
+    {
         $result = $handler(new ConfirmEmailCommand(
             token: $confirmEmailRequest->token
         ));

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Application\Profile\ChangeMyPassword;
 
 use App\Infrastructure\Doctrine\Repository\UserRepository;
@@ -9,16 +11,17 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 final readonly class ChangeMyPasswordHandler
 {
     public function __construct(
-        private UserRepository                  $userRepository,
-        private UserPasswordHasherInterface     $passwordHasher,
-        private EntityManagerInterface          $em
-    ) {}
+        private UserRepository $userRepository,
+        private UserPasswordHasherInterface $passwordHasher,
+        private EntityManagerInterface $em,
+    ) {
+    }
 
     public function __invoke(ChangeMyPasswordCommand $command): ChangeMyPasswordResult
     {
         $user = $this->userRepository->findOneBy(['id' => $command->userId]);
 
-        if ($user === null) {
+        if (null === $user) {
             throw new \DomainException('User not found.');
         }
 

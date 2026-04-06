@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\EventSubscriber;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -65,7 +67,7 @@ final class ApiExceptionSubscriber implements EventSubscriberInterface
 
         $previous = $exception->getPrevious();
 
-        while ($previous !== null) {
+        while (null !== $previous) {
             if ($previous instanceof ValidationFailedException) {
                 return $previous;
             }

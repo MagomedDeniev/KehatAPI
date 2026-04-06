@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Service;
 
 use Psr\Log\LoggerInterface;
@@ -15,24 +17,23 @@ final class MailerService
     public function __construct(
         private readonly MailerInterface $mailer,
         private readonly LoggerInterface $logger,
-        string                           $fromAddress,
-        string                           $fromName,
-    )
-    {
+        string $fromAddress,
+        string $fromName,
+    ) {
         $this->from = new Address($fromAddress, $fromName);
     }
 
     /**
      * @param array<string, mixed> $context
+     *
      * @throws TransportExceptionInterface
      */
     public function sendTemplate(
         string|Address $to,
-        string         $subject,
-        string         $template,
-        array          $context = [],
-    ): void
-    {
+        string $subject,
+        string $template,
+        array $context = [],
+    ): void {
         $email = (new TemplatedEmail())
             ->from($this->from)
             ->to($to)

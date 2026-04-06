@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Api\Auth\RestorePassword;
 
 use App\Application\Auth\RestorePassword\RestorePasswordCommand;
@@ -12,7 +14,8 @@ use Symfony\Component\Routing\Attribute\Route;
 final class RestorePasswordController extends AbstractController
 {
     #[Route('/api/restore/password', name: 'api_restore_password', methods: ['POST'])]
-    public function restorePassword(#[MapRequestPayload] RestorePasswordRequest $restorePasswordRequest, RestorePasswordHandler $handler): JsonResponse {
+    public function restorePassword(#[MapRequestPayload] RestorePasswordRequest $restorePasswordRequest, RestorePasswordHandler $handler): JsonResponse
+    {
         $result = $handler(new RestorePasswordCommand(
             token: $restorePasswordRequest->token,
             password: $restorePasswordRequest->newPassword

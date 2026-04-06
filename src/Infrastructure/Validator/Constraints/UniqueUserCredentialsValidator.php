@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Validator\Constraints;
 
 use App\Infrastructure\Api\Auth\Register\RegisterRequest;
@@ -35,7 +37,7 @@ final class UniqueUserCredentialsValidator extends ConstraintValidator
         if ($value instanceof ChangeMySettingsRequest) {
             $currentSecurityUser = $this->security->getUser();
 
-            if ($currentSecurityUser === null) {
+            if (null === $currentSecurityUser) {
                 return;
             }
 
@@ -43,10 +45,10 @@ final class UniqueUserCredentialsValidator extends ConstraintValidator
                 'email' => $currentSecurityUser->getUserIdentifier(),
             ]);
 
-            if ($email !== '') {
+            if ('' !== $email) {
                 $userByEmail = $this->userRepository->findOneBy(['email' => $email]);
 
-                if ($userByEmail !== null && $userByEmail->getId() !== $currentUser?->getId()) {
+                if (null !== $userByEmail && $userByEmail->getId() !== $currentUser?->getId()) {
                     $this->context
                         ->buildViolation($constraint->emailMessage)
                         ->atPath('email')
@@ -54,10 +56,10 @@ final class UniqueUserCredentialsValidator extends ConstraintValidator
                 }
             }
 
-            if ($username !== '') {
+            if ('' !== $username) {
                 $userByUsername = $this->userRepository->findOneBy(['username' => $username]);
 
-                if ($userByUsername !== null && $userByUsername->getId() !== $currentUser?->getId()) {
+                if (null !== $userByUsername && $userByUsername->getId() !== $currentUser?->getId()) {
                     $this->context
                         ->buildViolation($constraint->usernameMessage)
                         ->atPath('username')
@@ -68,14 +70,14 @@ final class UniqueUserCredentialsValidator extends ConstraintValidator
             return;
         }
 
-        if ($email !== '' && $this->userRepository->findOneBy(['email' => $email]) !== null) {
+        if ('' !== $email && null !== $this->userRepository->findOneBy(['email' => $email])) {
             $this->context
                 ->buildViolation($constraint->emailMessage)
                 ->atPath('email')
                 ->addViolation();
         }
 
-        if ($username !== '' && $this->userRepository->findOneBy(['username' => $username]) !== null) {
+        if ('' !== $username && null !== $this->userRepository->findOneBy(['username' => $username])) {
             $this->context
                 ->buildViolation($constraint->usernameMessage)
                 ->atPath('username')

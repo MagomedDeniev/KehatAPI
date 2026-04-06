@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Domain\Rules;
 
 final class UserRules
@@ -14,5 +16,4 @@ final class UserRules
     public const PASSWORD_MAX = 4096;
     public const TOKEN_MIN = 32;
     public const TOKEN_MAX = 255;
-
 }

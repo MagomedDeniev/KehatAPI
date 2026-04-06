@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Doctrine\Entity;
 
 use App\Infrastructure\Doctrine\Repository\UserRepository;
@@ -66,12 +68,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         };
 
         // Если переданный $type пустой, либо у сущности нет токена и/или времени истечения токена
-        if ($storedToken === null || $storedTokenExpiresAt === null) {
+        if (null === $storedToken || null === $storedTokenExpiresAt) {
             return false;
         }
 
         // Переданный $token пустой или не совпадает с сохраненным
-        if ($token === '' || $storedToken !== $token) {
+        if ('' === $token || $storedToken !== $token) {
             return false;
         }
 
@@ -81,10 +83,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function clearToken(string $type): void
     {
-        if ($type === 'email') {
+        if ('email' === $type) {
             $this->emailToken = null;
             $this->emailTokenExpiresAt = null;
-        } elseif ($type === 'password') {
+        } elseif ('password' === $type) {
             $this->passwordToken = null;
             $this->passwordTokenExpiresAt = null;
         }
@@ -151,7 +153,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getUserIdentifier(): string
     {
-        if ($this->email === '') {
+        if ('' === $this->email) {
             throw new \LogicException('User email cannot be empty.');
         }
 
@@ -184,7 +186,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $data;
     }
 
-    public function eraseCredentials(): void {}
+    public function eraseCredentials(): void
+    {
+    }
 
     public function getRegisteredAt(): ?\DateTimeImmutable
     {

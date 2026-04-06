@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Validator\Constraints;
 
 use App\Infrastructure\Doctrine\Entity\User;
@@ -11,8 +13,9 @@ use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 final class ValidPasswordTokenValidator extends ConstraintValidator
 {
     public function __construct(
-        private readonly UserRepository $userRepository
-    ) {}
+        private readonly UserRepository $userRepository,
+    ) {
+    }
 
     public function validate(mixed $value, Constraint $constraint): void
     {

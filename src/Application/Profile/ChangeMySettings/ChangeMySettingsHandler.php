@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Application\Profile\ChangeMySettings;
 
 use App\Domain\ValueObject\Email;
@@ -11,7 +13,6 @@ use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Security\Csrf\TokenGenerator\TokenGeneratorInterface;
-use Throwable;
 
 final readonly class ChangeMySettingsHandler
 {
@@ -19,12 +20,13 @@ final readonly class ChangeMySettingsHandler
         private UserRepository $userRepository,
         private TokenGeneratorInterface $tokenGenerator,
         private MailerService $mailerService,
-        private EntityManagerInterface $em
-    ) {}
+        private EntityManagerInterface $em,
+    ) {
+    }
 
     /**
      * @throws TransportExceptionInterface
-     * @throws Exception|Throwable
+     * @throws Exception|\Throwable
      */
     public function __invoke(ChangeMySettingsCommand $command): ChangeMySettingsResult
     {
@@ -34,7 +36,7 @@ final readonly class ChangeMySettingsHandler
 
         $user = $this->userRepository->findOneBy(['id' => $command->userId]);
 
-        if ($user === null) {
+        if (null === $user) {
             throw new \DomainException('User not found.');
         }
 
@@ -66,7 +68,7 @@ final readonly class ChangeMySettingsHandler
                 );
 
                 $connection->commit();
-            } catch (Throwable $e) {
+            } catch (\Throwable $e) {
                 $connection->rollBack();
                 throw $e;
             }

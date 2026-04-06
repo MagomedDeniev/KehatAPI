@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Application\Auth\Register;
 
 use App\Domain\ValueObject\Email;
@@ -12,7 +14,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Csrf\TokenGenerator\TokenGeneratorInterface;
-use Throwable;
 
 final readonly class RegisterHandler
 {
@@ -20,12 +21,13 @@ final readonly class RegisterHandler
         private EntityManagerInterface $em,
         private UserPasswordHasherInterface $passwordHasher,
         private TokenGeneratorInterface $tokenGenerator,
-        private MailerService $mailer
-    ) {}
+        private MailerService $mailer,
+    ) {
+    }
 
     /**
      * @throws TransportExceptionInterface
-     * @throws Exception|Throwable
+     * @throws Exception|\Throwable
      */
     public function __invoke(RegisterCommand $command): RegisterResult
     {
@@ -55,7 +57,7 @@ final readonly class RegisterHandler
             );
 
             $connection->commit();
-        } catch (Throwable $e) {
+        } catch (\Throwable $e) {
             $connection->rollBack();
             throw $e;
         }

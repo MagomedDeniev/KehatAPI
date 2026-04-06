@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Api\Profile\ChangeMySettings;
 
 use App\Application\Profile\ChangeMySettings\ChangeMySettingsCommand;
@@ -12,19 +14,18 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
-use Throwable;
 
 final class ChangeMySettingsController extends AbstractController
 {
     /**
-     * @throws Throwable
+     * @throws \Throwable
      * @throws TransportExceptionInterface
      * @throws Exception
      */
     #[Route('/api/me/settings', name: 'api_change_my_settings', methods: ['PATCH'])]
     public function changeMySettings(#[CurrentUser] User $user, #[MapRequestPayload] ChangeMySettingsRequest $changeMeRequest, ChangeMySettingsHandler $handler): JsonResponse
     {
-        if ($user->getId() === null) {
+        if (null === $user->getId()) {
             throw $this->createAccessDeniedException('User not have id.');
         }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Api\Profile\ChangeMySettings;
 
 use App\Infrastructure\Validator\Compounds as Compound;
@@ -14,5 +16,6 @@ final readonly class ChangeMySettingsRequest
 
         #[Compound\Email]
         public string $email,
-    ) {}
+    ) {
+    }
 }

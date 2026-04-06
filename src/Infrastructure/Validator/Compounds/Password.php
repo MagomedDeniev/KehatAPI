@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Validator\Compounds;
 
 use App\Domain\Rules\UserRules;
@@ -13,7 +15,7 @@ final class Password extends Compound
     {
         return [
             new Assert\NotBlank(),
-            new Assert\Length(min: UserRules::PASSWORD_MIN, max: UserRules::PASSWORD_MAX)
+            new Assert\Length(min: UserRules::PASSWORD_MIN, max: UserRules::PASSWORD_MAX),
         ];
     }
 }

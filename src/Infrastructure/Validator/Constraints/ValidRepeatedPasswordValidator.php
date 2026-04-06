@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Infrastructure\Validator\Constraints;
 
 use Symfony\Component\Validator\Constraint;
@@ -14,7 +16,7 @@ final class ValidRepeatedPasswordValidator extends ConstraintValidator
             throw new UnexpectedTypeException($constraint, ValidRepeatedPassword::class);
         }
 
-        if ($value === null) {
+        if (null === $value) {
             return;
         }
 
