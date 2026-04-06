@@ -15,6 +15,11 @@ final readonly class ConfirmEmailHandler
     public function __invoke(ConfirmEmailCommand $command): ConfirmEmailResult
     {
         $user = $this->userRepository->findOneBy(['emailToken' => $command->token]);
+
+        if ($user === null) {
+            throw new \DomainException('Invalid email confirmation token.');
+        }
+
         $user->setConfirmedEmail($user->getEmail());
         $user->clearToken('email');
         $this->em->flush();

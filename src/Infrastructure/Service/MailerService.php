@@ -23,6 +23,7 @@ final class MailerService
     }
 
     /**
+     * @param array<string, mixed> $context
      * @throws TransportExceptionInterface
      */
     public function sendTemplate(
@@ -43,7 +44,7 @@ final class MailerService
             $this->mailer->send($email);
         } catch (TransportExceptionInterface $e) {
             $this->logger->error('Failed to send email.', [
-                'to' => (string)$to,
+                'to' => is_string($to) ? $to : $to->getAddress(),
                 'subject' => $subject,
                 'template' => $template,
                 'exception' => $e,

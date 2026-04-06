@@ -17,6 +17,11 @@ final readonly class ChangeMyPasswordHandler
     public function __invoke(ChangeMyPasswordCommand $command): ChangeMyPasswordResult
     {
         $user = $this->userRepository->findOneBy(['id' => $command->userId]);
+
+        if ($user === null) {
+            throw new \DomainException('User not found.');
+        }
+
         $user->setPassword($this->passwordHasher->hashPassword($user, $command->password));
         $this->em->flush();
 

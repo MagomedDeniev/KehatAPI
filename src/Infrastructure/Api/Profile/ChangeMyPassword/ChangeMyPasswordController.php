@@ -11,11 +11,14 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
-#[Route('/api', name: 'api_profile_')]
 final class ChangeMyPasswordController extends AbstractController
 {
-    #[Route('/me/password', name: 'change_password', methods: ['PATCH'])]
+    #[Route('/api/me/password', name: 'api_change_password', methods: ['PATCH'])]
     public function changePassword(#[CurrentUser] ?User $user, #[MapRequestPayload] ChangeMyPasswordRequest $changePasswordRequest, ChangeMyPasswordHandler $handler): JsonResponse {
+        if ($user === null || $user->getId() === null) {
+            throw $this->createAccessDeniedException('User is not authenticated or not have id.');
+        }
+
         $result = $handler(new ChangeMyPasswordCommand(
             userId: $user->getId(),
             password: $changePasswordRequest->newPassword

@@ -14,6 +14,18 @@ final class ValidRepeatedPasswordValidator extends ConstraintValidator
             throw new UnexpectedTypeException($constraint, ValidRepeatedPassword::class);
         }
 
+        if ($value === null) {
+            return;
+        }
+
+        if (!is_object($value)) {
+            return;
+        }
+
+        if (!property_exists($value, 'newPassword') || !property_exists($value, 'repeatPassword')) {
+            return;
+        }
+
         if ($value->newPassword !== $value->repeatPassword) {
             $this->context
                 ->buildViolation($constraint->message)

@@ -17,6 +17,11 @@ final readonly class RestorePasswordHandler
     public function __invoke(RestorePasswordCommand $command): RestorePasswordResult
     {
         $user = $this->userRepository->findOneBy(['passwordToken' => $command->token]);
+
+        if ($user === null) {
+            throw new \DomainException('Invalid password reset token.');
+        }
+
         $user->setPassword($this->passwordHasher->hashPassword($user, $command->password));
         $user->clearToken('password');
         $this->em->flush();

@@ -33,7 +33,15 @@ final class UniqueUserCredentialsValidator extends ConstraintValidator
         $username = trim($value->username);
 
         if ($value instanceof ChangeMySettingsRequest) {
-            $currentUser = $this->userRepository->findOneBy(['email' => $this->security->getUser()->getUserIdentifier()]);
+            $currentSecurityUser = $this->security->getUser();
+
+            if ($currentSecurityUser === null) {
+                return;
+            }
+
+            $currentUser = $this->userRepository->findOneBy([
+                'email' => $currentSecurityUser->getUserIdentifier(),
+            ]);
 
             if ($email !== '') {
                 $userByEmail = $this->userRepository->findOneBy(['email' => $email]);

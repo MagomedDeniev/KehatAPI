@@ -24,19 +24,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\NotBlank]
     #[Assert\Email]
     #[ORM\Column(length: 180, unique: true)]
-    private ?string $email = null;
+    private string $email;
 
     #[ORM\Column(length: 180, nullable: true)]
     private ?string $confirmedEmail = null;
 
     #[ORM\Column]
-    private ?string $password = null;
+    private string $password;
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 6, max: 180)]
     #[ORM\Column(length: 180, unique: true)]
-    private ?string $username = null;
+    private string $username;
 
+    /** @var list<string> */
     #[ORM\Column]
     private array $roles = [];
 
@@ -53,9 +54,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?\DateTimeImmutable $emailTokenExpiresAt = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $registeredAt = null;
+    private \DateTimeImmutable $registeredAt;
 
-    public function tokenIsValid(string $token, string $type): bool
+    public function tokenIsValid(mixed $token, string $type): bool
     {
         // Определяем, с каким токеном и сроком действия работаем
         [$storedToken, $storedTokenExpiresAt] = match ($type) {
@@ -100,7 +101,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->id;
     }
 
-    public function getEmail(): ?string
+    public function getEmail(): string
     {
         return $this->email;
     }
@@ -150,7 +151,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        if ($this->email === '') {
+            throw new \LogicException('User email cannot be empty.');
+        }
+
+        return $this->email;
     }
 
     public function getRoles(): array
@@ -161,6 +166,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return array_unique($roles);
     }
 
+    /**
+     * @param list<string> $roles
+     */
     public function setRoles(array $roles): static
     {
         $this->roles = $roles;

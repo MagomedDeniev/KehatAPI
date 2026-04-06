@@ -33,6 +33,11 @@ final readonly class ChangeMySettingsHandler
         $tokenExpiresAt = new TokenExpirationTime();
 
         $user = $this->userRepository->findOneBy(['id' => $command->userId]);
+
+        if ($user === null) {
+            throw new \DomainException('User not found.');
+        }
+
         $emailsEquals = $email->value() === $user->getConfirmedEmail();
 
         if (!$emailsEquals) {
