@@ -7,6 +7,7 @@ namespace App\Application\Auth\RestorePassword;
 use App\Application\Contract\PasswordHasherInterface;
 use App\Domain\Entity\DomainUser;
 use App\Domain\Repository\DomainUserRepositoryInterface;
+use App\Domain\ValueObject\Password;
 
 final readonly class RestorePasswordHandler
 {
@@ -24,11 +25,18 @@ final readonly class RestorePasswordHandler
             throw new \DomainException('Invalid password reset token.');
         }
 
-        $user->restorePassword($this->passwordHasher->hash($command->password));
+        if (!$user->hasValidPasswordToken()) {
+            throw new \DomainException('Password reset token is invalid or expired.');
+        }
+
+        $password = new Password($command->password);
+        $hashedPassword = $this->passwordHasher->hash((string) $password);
+
+        $user->changePassword($hashedPassword);
         $this->domainUserRepository->updateDomainUser($user);
 
         return new RestorePasswordResult(
-            userId: (int) $user->getId(),
+            userId: $user->getId() ?? throw new \LogicException('Registered user must have id.'),
             message: 'Your password has been restored, you can login now.'
         );
     }

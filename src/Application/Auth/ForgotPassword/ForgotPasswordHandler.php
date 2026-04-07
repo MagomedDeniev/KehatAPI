@@ -6,6 +6,7 @@ namespace App\Application\Auth\ForgotPassword;
 
 use App\Domain\Entity\DomainUser;
 use App\Domain\Repository\DomainUserRepositoryInterface;
+use App\Domain\ValueObject\Email;
 use App\Domain\ValueObject\TokenExpirationTime;
 use App\Infrastructure\Service\MailerService;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -25,7 +26,8 @@ final readonly class ForgotPasswordHandler
      */
     public function __invoke(ForgotPasswordCommand $command): ForgotPasswordResult
     {
-        $user = $this->domainUserRepository->findUserBy(['email' => $command->email]);
+        $email = (string) new Email($command->email);
+        $user = $this->domainUserRepository->findUserBy(['email' => $email]);
 
         if ($user instanceof DomainUser) {
             $tokenExpiresAt = new TokenExpirationTime();
@@ -43,7 +45,7 @@ final readonly class ForgotPasswordHandler
         }
 
         return new ForgotPasswordResult(
-            email: $command->email,
+            email: $email,
             message: 'If email is valid, you will receive a link to reset your password.',
         );
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\EventSubscriber;
 
 use App\Infrastructure\Service\JsonResponder;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
@@ -101,6 +102,36 @@ final readonly class ApiExceptionSubscriber implements EventSubscriberInterface
                 message: $message,
                 status: $status,
                 headers: $headers
+            ));
+
+            return;
+        }
+
+        if ($exception instanceof UniqueConstraintViolationException) {
+            $event->setResponse($this->responder->error(
+                code: 'unique_constraint_violation',
+                message: 'Resource with these credentials already exists.',
+                status: 409,
+            ));
+
+            return;
+        }
+
+        if ($exception instanceof \InvalidArgumentException) {
+            $event->setResponse($this->responder->error(
+                code: 'invalid_argument',
+                message: $exception->getMessage(),
+                status: 422,
+            ));
+
+            return;
+        }
+
+        if ($exception instanceof \DomainException) {
+            $event->setResponse($this->responder->error(
+                code: 'domain_error',
+                message: $exception->getMessage(),
+                status: 422,
             ));
 
             return;

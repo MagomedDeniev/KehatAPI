@@ -22,7 +22,7 @@ final readonly class ConfirmEmailHandler
             throw new \DomainException('Invalid email confirmation token.');
         }
 
-        if (!$user->emailTokenIsValid($command->token)) {
+        if (!$user->hasValidEmailToken()) {
             throw new \DomainException('Email confirmation token is invalid or expired.');
         }
 

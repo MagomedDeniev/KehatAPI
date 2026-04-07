@@ -8,7 +8,8 @@ final readonly class ChangeMyPasswordCommand
 {
     public function __construct(
         public int $userId,
-        public string $password,
+        public string $currentPassword,
+        public string $newPassword,
     ) {
     }
 }

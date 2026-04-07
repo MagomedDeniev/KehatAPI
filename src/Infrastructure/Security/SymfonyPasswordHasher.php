@@ -19,4 +19,12 @@ final readonly class SymfonyPasswordHasher implements PasswordHasherInterface
     {
         return $this->passwordHasher->hashPassword(new User(), $plainPassword);
     }
+
+    public function verify(string $hashedPassword, string $plainPassword): bool
+    {
+        $user = new User();
+        $user->setPassword($hashedPassword);
+
+        return $this->passwordHasher->isPasswordValid($user, $plainPassword);
+    }
 }

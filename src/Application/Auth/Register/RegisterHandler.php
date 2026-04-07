@@ -8,6 +8,7 @@ use App\Application\Contract\PasswordHasherInterface;
 use App\Domain\Entity\DomainUser;
 use App\Domain\Repository\DomainUserRepositoryInterface;
 use App\Domain\ValueObject\Email;
+use App\Domain\ValueObject\Password;
 use App\Domain\ValueObject\TokenExpirationTime;
 use App\Domain\ValueObject\Username;
 use App\Infrastructure\Service\MailerService;
@@ -29,16 +30,28 @@ final readonly class RegisterHandler
      */
     public function __invoke(RegisterCommand $command): RegisterResult
     {
-        $email = new Email($command->email);
-        $username = new Username($command->username);
-        $tokenExpiresAt = new TokenExpirationTime();
+        $email = (string) (new Email($command->email));
+        $username = (string) (new Username($command->username));
+
+        if ($this->domainUserRepository->findUserBy(['email' => $email]) instanceof DomainUser) {
+            throw new \DomainException('There is already an account with this email.');
+        }
+
+        if ($this->domainUserRepository->findUserBy(['username' => $username]) instanceof DomainUser) {
+            throw new \DomainException('There is already an account with this username.');
+        }
+
+        $password = (string) (new Password($command->password));
+        $hashedPassword = $this->passwordHasher->hash($password);
+        $emailToken = $this->tokenGenerator->generateToken();
+        $emailTokenExpiresAt = (new TokenExpirationTime())->value();
 
         $user = DomainUser::register(
-            email: $email->value(),
-            password: $this->passwordHasher->hash($command->password),
-            username: $username->value(),
-            emailToken: $this->tokenGenerator->generateToken(),
-            emailTokenExpiresAt: $tokenExpiresAt->value(),
+            email: $email,
+            password: $hashedPassword,
+            username: $username,
+            emailToken: $emailToken,
+            emailTokenExpiresAt: $emailTokenExpiresAt,
         );
 
         $user = $this->domainUserRepository->createDomainUser($user);

@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace App\Infrastructure\Api\Auth\RestorePassword;
 
 use App\Infrastructure\Validator\Compounds as Compound;
-use App\Infrastructure\Validator\Constraints as Constraint;
 
-#[Constraint\ValidRepeatedPassword]
 final readonly class RestorePasswordRequest
 {
     public function __construct(
@@ -16,9 +14,6 @@ final readonly class RestorePasswordRequest
 
         #[Compound\Password]
         public string $newPassword,
-
-        #[Compound\RepeatedPassword]
-        public string $repeatPassword,
     ) {
     }
 }

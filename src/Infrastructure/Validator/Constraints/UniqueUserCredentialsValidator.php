@@ -6,9 +6,9 @@ namespace App\Infrastructure\Validator\Constraints;
 
 use App\Infrastructure\Api\Account\ChangeMySettings\ChangeMySettingsRequest;
 use App\Infrastructure\Api\Auth\Register\RegisterRequest;
+use App\Infrastructure\Doctrine\Entity\User;
 use App\Infrastructure\Doctrine\Repository\UserRepository;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
@@ -36,20 +36,18 @@ final class UniqueUserCredentialsValidator extends ConstraintValidator
         $username = trim($value->username);
 
         if ($value instanceof ChangeMySettingsRequest) {
-            $currentSecurityUser = $this->security->getUser();
+            $currentUser = $this->security->getUser();
 
-            if (!$currentSecurityUser instanceof UserInterface) {
+            if (!$currentUser instanceof User || null === $currentUser->getId()) {
                 return;
             }
 
-            $currentUser = $this->userRepository->findOneBy([
-                'email' => $currentSecurityUser->getUserIdentifier(),
-            ]);
+            $currentUserId = $currentUser->getId();
 
             if ('' !== $email) {
                 $userByEmail = $this->userRepository->findOneBy(['email' => $email]);
 
-                if (null !== $userByEmail && $userByEmail->getId() !== $currentUser?->getId()) {
+                if (null !== $userByEmail && $userByEmail->getId() !== $currentUserId) {
                     $this->context
                         ->buildViolation($constraint->emailMessage)
                         ->atPath('email')
@@ -60,7 +58,7 @@ final class UniqueUserCredentialsValidator extends ConstraintValidator
             if ('' !== $username) {
                 $userByUsername = $this->userRepository->findOneBy(['username' => $username]);
 
-                if (null !== $userByUsername && $userByUsername->getId() !== $currentUser?->getId()) {
+                if (null !== $userByUsername && $userByUsername->getId() !== $currentUserId) {
                     $this->context
                         ->buildViolation($constraint->usernameMessage)
                         ->atPath('username')

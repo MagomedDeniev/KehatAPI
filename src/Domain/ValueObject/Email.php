@@ -13,26 +13,21 @@ final readonly class Email
     public function __construct(string $value)
     {
         // Убираем пробелы и приводим к нижнему регистру.
-        $normalized = self::normalize($value);
+        $value = mb_strtolower(trim($value));
 
         // Проверяем, что строка не пустая и похожа на email.
-        if (false === filter_var($normalized, FILTER_VALIDATE_EMAIL) || '' === $value) {
+        if (false === filter_var($value, FILTER_VALIDATE_EMAIL) || '' === $value) {
             throw new \InvalidArgumentException('Email is not valid.');
         }
 
-        if (mb_strlen($normalized) < UserRules::EMAIL_MIN || mb_strlen($normalized) > UserRules::EMAIL_MAX) {
+        if (mb_strlen($value) < UserRules::EMAIL_MIN || mb_strlen($value) > UserRules::EMAIL_MAX) {
             throw new \InvalidArgumentException(sprintf('Email length must be between %d and %d characters.', UserRules::EMAIL_MIN, UserRules::EMAIL_MAX));
         }
 
-        $this->value = $normalized;
+        $this->value = $value;
     }
 
-    public static function normalize(string $value): string
-    {
-        return mb_strtolower(trim($value));
-    }
-
-    public function value(): string
+    public function __toString(): string
     {
         return $this->value;
     }

@@ -13,30 +13,20 @@ final readonly class Username
     public function __construct(string $value)
     {
         // Убираем пробелы по краям.
-        $normalized = self::normalize($value);
+        $value = trim($value);
 
-        // Проверяем длину.
-        if ('' === $normalized) {
-            throw new \InvalidArgumentException('Username cannot be blank.');
-        }
-
-        if (mb_strlen($normalized) < UserRules::USERNAME_MIN || mb_strlen($normalized) > UserRules::USERNAME_MAX) {
+        if (mb_strlen($value) < UserRules::USERNAME_MIN || mb_strlen($value) > UserRules::USERNAME_MAX) {
             throw new \InvalidArgumentException(sprintf('Username length must be between %d and %d characters.', UserRules::USERNAME_MIN, UserRules::USERNAME_MAX));
         }
 
-        if (!preg_match(UserRules::USERNAME_PATTERN, $normalized)) {
+        if (!preg_match(UserRules::USERNAME_PATTERN, $value)) {
             throw new \InvalidArgumentException('Username can contain only letters, numbers, dots, and underscores.');
         }
 
-        $this->value = $normalized;
+        $this->value = $value;
     }
 
-    public static function normalize(string $value): string
-    {
-        return trim($value);
-    }
-
-    public function value(): string
+    public function __toString(): string
     {
         return $this->value;
     }

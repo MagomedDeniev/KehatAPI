@@ -17,9 +17,8 @@ final class Username extends Compound
             new Assert\NotBlank(),
             new Assert\Length(min: UserRules::USERNAME_MIN, max: UserRules::USERNAME_MAX),
             new Assert\Regex(
-                pattern: '/^[a-z0-9._]+$/i',
-                message: 'form.username.can.consist.symbols',
-                htmlPattern: '^[a-zA-Z0-9._]+$'
+                pattern: UserRules::USERNAME_PATTERN,
+                message: 'form.username.can.consist.symbols'
             ),
         ];
     }

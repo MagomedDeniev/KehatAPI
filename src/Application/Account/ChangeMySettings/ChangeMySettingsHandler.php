@@ -27,8 +27,8 @@ final readonly class ChangeMySettingsHandler
      */
     public function __invoke(ChangeMySettingsCommand $command): ChangeMySettingsResult
     {
-        $email = new Email($command->email);
-        $username = new Username($command->username);
+        $email = (string) (new Email($command->email));
+        $username = (string) (new Username($command->username));
 
         $user = $this->domainUserRepository->findUserBy(['id' => $command->userId]);
 
@@ -36,11 +36,23 @@ final readonly class ChangeMySettingsHandler
             throw new \DomainException('User not found.');
         }
 
-        if ($email->value() === $user->getConfirmedEmail()) {
-            $user->saveSettings($username->value(), $email->value());
+        $userByEmail = $this->domainUserRepository->findUserBy(['email' => $email]);
+        if ($userByEmail instanceof DomainUser && $userByEmail->getId() !== $user->getId()) {
+            throw new \DomainException('There is already an account with this email.');
+        }
+
+        $userByUsername = $this->domainUserRepository->findUserBy(['username' => $username]);
+        if ($userByUsername instanceof DomainUser && $userByUsername->getId() !== $user->getId()) {
+            throw new \DomainException('There is already an account with this username.');
+        }
+
+        // Логика email такая, что подтвержденной почта считается если email = confirmedEmail
+        // При изменении email, email должен сразу меняться, тем самым давая понять что email != confirmedEmail
+        if ($email === $user->getConfirmedEmail()) {
+            $user->saveSettings($username, $email);
         } else {
             $tokenExpiresAt = new TokenExpirationTime();
-            $user->saveSettingsWithEmailUpdate($username->value(), $email->value(), $this->tokenGenerator->generateToken(), $tokenExpiresAt->value());
+            $user->saveSettingsWithEmailUpdate($username, $email, $this->tokenGenerator->generateToken(), $tokenExpiresAt->value());
 
             $this->mailerService->sendTemplate(
                 to: $user->getEmail(),

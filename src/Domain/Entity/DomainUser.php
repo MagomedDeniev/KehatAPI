@@ -53,17 +53,22 @@ final class DomainUser
         $this->emailTokenExpiresAt = null;
     }
 
-    public function emailTokenIsValid(string $token): bool
+    public function hasValidEmailToken(): bool
     {
         if (null === $this->emailToken || !$this->emailTokenExpiresAt instanceof \DateTimeImmutable) {
             return false;
         }
 
-        if ('' === $token || $this->emailToken !== $token) {
+        return $this->emailTokenExpiresAt > new \DateTimeImmutable();
+    }
+
+    public function hasValidPasswordToken(): bool
+    {
+        if (null === $this->passwordToken || !$this->passwordTokenExpiresAt instanceof \DateTimeImmutable) {
             return false;
         }
 
-        return $this->emailTokenExpiresAt > new \DateTimeImmutable();
+        return $this->passwordTokenExpiresAt > new \DateTimeImmutable();
     }
 
     public function assignPasswordToken(?string $token, ?\DateTimeImmutable $tokenExpiresAt): void
@@ -72,16 +77,11 @@ final class DomainUser
         $this->passwordTokenExpiresAt = $tokenExpiresAt;
     }
 
-    public function restorePassword(string $password): void
+    public function changePassword(string $password): void
     {
         $this->password = $password;
         $this->passwordToken = null;
         $this->passwordTokenExpiresAt = null;
-    }
-
-    public function setPassword(string $password): void
-    {
-        $this->password = $password;
     }
 
     public function saveSettings(string $username, string $email): void
