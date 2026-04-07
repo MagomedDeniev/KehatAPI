@@ -32,7 +32,7 @@ final readonly class ForgotPasswordHandler
 
             $user->assignPasswordToken($this->tokenGenerator->generateToken(), $tokenExpiresAt->value());
 
-            $this->domainUserRepository->saveDomainUser($user);
+            $this->domainUserRepository->updateDomainUser($user);
 
             $this->mailerService->sendTemplate(
                 to: $user->getEmail(),

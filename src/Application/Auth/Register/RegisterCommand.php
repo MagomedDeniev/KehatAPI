@@ -9,7 +9,7 @@ final readonly class RegisterCommand
     public function __construct(
         public string $email,
         public string $username,
-        public string $plainPassword,
+        public string $password,
     ) {
     }
 }

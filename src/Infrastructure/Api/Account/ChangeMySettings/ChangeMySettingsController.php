@@ -7,6 +7,7 @@ namespace App\Infrastructure\Api\Account\ChangeMySettings;
 use App\Application\Account\ChangeMySettings\ChangeMySettingsCommand;
 use App\Application\Account\ChangeMySettings\ChangeMySettingsHandler;
 use App\Infrastructure\Doctrine\Entity\User;
+use App\Infrastructure\Service\JsonResponder;
 use Doctrine\DBAL\Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,7 +24,7 @@ final class ChangeMySettingsController extends AbstractController
      * @throws Exception
      */
     #[Route('/api/me/settings', name: 'api_change_my_settings', methods: ['PATCH'])]
-    public function changeMySettings(#[CurrentUser] User $user, #[MapRequestPayload] ChangeMySettingsRequest $changeMeRequest, ChangeMySettingsHandler $handler): JsonResponse
+    public function changeMySettings(#[CurrentUser] User $user, #[MapRequestPayload] ChangeMySettingsRequest $changeMeRequest, ChangeMySettingsHandler $handler, JsonResponder $responder): JsonResponse
     {
         if (null === $user->getId()) {
             throw $this->createAccessDeniedException('User not have id.');
@@ -35,10 +36,8 @@ final class ChangeMySettingsController extends AbstractController
             email: $changeMeRequest->email,
         ));
 
-        return $this->json([
-            'success' => true,
-            'data' => [],
-            'message' => $result->message,
-        ], 201);
+        return $responder->success(
+            message: $result->message
+        );
     }
 }

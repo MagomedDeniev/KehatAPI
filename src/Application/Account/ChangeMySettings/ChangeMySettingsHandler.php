@@ -50,7 +50,7 @@ final readonly class ChangeMySettingsHandler
             );
         }
 
-        $this->domainUserRepository->saveDomainUser($user);
+        $this->domainUserRepository->updateDomainUser($user);
 
         return new ChangeMySettingsResult(
             message: 'Your settings updated successfully.'

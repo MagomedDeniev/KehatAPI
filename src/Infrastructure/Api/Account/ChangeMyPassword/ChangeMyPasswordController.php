@@ -7,6 +7,7 @@ namespace App\Infrastructure\Api\Account\ChangeMyPassword;
 use App\Application\Account\ChangeMyPassword\ChangeMyPasswordCommand;
 use App\Application\Account\ChangeMyPassword\ChangeMyPasswordHandler;
 use App\Infrastructure\Doctrine\Entity\User;
+use App\Infrastructure\Service\JsonResponder;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -16,7 +17,7 @@ use Symfony\Component\Security\Http\Attribute\CurrentUser;
 final class ChangeMyPasswordController extends AbstractController
 {
     #[Route('/api/me/password', name: 'api_change_password', methods: ['PATCH'])]
-    public function changePassword(#[CurrentUser] ?User $user, #[MapRequestPayload] ChangeMyPasswordRequest $changePasswordRequest, ChangeMyPasswordHandler $handler): JsonResponse
+    public function changePassword(#[CurrentUser] ?User $user, #[MapRequestPayload] ChangeMyPasswordRequest $changePasswordRequest, ChangeMyPasswordHandler $handler, JsonResponder $responder): JsonResponse
     {
         if (!$user instanceof User || null === $user->getId()) {
             throw $this->createAccessDeniedException('User is not authenticated or not have id.');
@@ -27,10 +28,8 @@ final class ChangeMyPasswordController extends AbstractController
             password: $changePasswordRequest->newPassword
         ));
 
-        return $this->json([
-            'success' => true,
-            'data' => [],
-            'message' => $result->message,
-        ], 201);
+        return $responder->success(
+            message: $result->message
+        );
     }
 }

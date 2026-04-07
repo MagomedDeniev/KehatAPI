@@ -27,7 +27,7 @@ final readonly class ConfirmEmailHandler
         }
 
         $user->confirmEmail();
-        $this->domainUserRepository->saveDomainUser($user);
+        $this->domainUserRepository->updateDomainUser($user);
 
         return new ConfirmEmailResult(
             email: $user->getEmail(),

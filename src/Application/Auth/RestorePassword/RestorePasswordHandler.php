@@ -25,7 +25,7 @@ final readonly class RestorePasswordHandler
         }
 
         $user->restorePassword($this->passwordHasher->hash($command->password));
-        $this->domainUserRepository->saveDomainUser($user);
+        $this->domainUserRepository->updateDomainUser($user);
 
         return new RestorePasswordResult(
             userId: (int) $user->getId(),

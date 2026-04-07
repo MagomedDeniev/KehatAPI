@@ -35,13 +35,13 @@ final readonly class RegisterHandler
 
         $user = DomainUser::register(
             email: $email->value(),
-            password: $this->passwordHasher->hash($command->plainPassword),
+            password: $this->passwordHasher->hash($command->password),
             username: $username->value(),
             emailToken: $this->tokenGenerator->generateToken(),
             emailTokenExpiresAt: $tokenExpiresAt->value(),
         );
 
-        $user = $this->domainUserRepository->saveDomainUser($user);
+        $user = $this->domainUserRepository->createDomainUser($user);
 
         $this->mailer->sendTemplate(
             to: $user->getEmail(),

@@ -13,5 +13,7 @@ interface DomainUserRepositoryInterface
      */
     public function findUserBy(array $criteria): ?DomainUser;
 
-    public function saveDomainUser(DomainUser $domainUser): DomainUser;
+    public function createDomainUser(DomainUser $domainUser): DomainUser;
+
+    public function updateDomainUser(DomainUser $domainUser): DomainUser;
 }

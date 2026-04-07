@@ -6,6 +6,7 @@ namespace App\Infrastructure\Api\Auth\ForgotPassword;
 
 use App\Application\Auth\ForgotPassword\ForgotPasswordCommand;
 use App\Application\Auth\ForgotPassword\ForgotPasswordHandler;
+use App\Infrastructure\Service\JsonResponder;
 use Doctrine\DBAL\Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,18 +22,17 @@ final class ForgotPasswordController extends AbstractController
      * @throws Exception
      */
     #[Route('/api/forgot/password', name: 'api_forgot_password', methods: ['POST'])]
-    public function forgotPassword(#[MapRequestPayload] ForgotPasswordRequest $forgotPasswordRequest, ForgotPasswordHandler $handler): JsonResponse
+    public function forgotPassword(#[MapRequestPayload] ForgotPasswordRequest $forgotPasswordRequest, ForgotPasswordHandler $handler, JsonResponder $responder): JsonResponse
     {
         $result = $handler(new ForgotPasswordCommand(
             email: $forgotPasswordRequest->email,
         ));
 
-        return $this->json([
-            'success' => true,
-            'data' => [
+        return $responder->success(
+            data: [
                 'email' => $result->email,
             ],
-            'message' => $result->message,
-        ], 201);
+            message: $result->message
+        );
     }
 }

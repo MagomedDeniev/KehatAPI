@@ -25,7 +25,7 @@ final readonly class ChangeMyPasswordHandler
         }
 
         $user->setPassword($this->passwordHasher->hash($command->password));
-        $this->domainUserRepository->saveDomainUser($user);
+        $this->domainUserRepository->updateDomainUser($user);
 
         return new ChangeMyPasswordResult(
             message: 'Password updated successfully'

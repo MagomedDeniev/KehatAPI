@@ -51,23 +51,38 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $this->mapToDomain($user);
     }
 
-    public function saveDomainUser(DomainUser $domainUser): DomainUser
+    public function createDomainUser(DomainUser $domainUser): DomainUser
     {
-        $user = null;
-
         if (null !== $domainUser->getId()) {
-            $user = $this->find($domainUser->getId());
+            throw new \LogicException('Cannot create user that already has an id.');
         }
 
-        if (!$user instanceof User) {
-            $user = new User();
-        }
+        $user = new User();
 
         $this->updateOrmFromDomain($user, $domainUser);
 
         $em = $this->getEntityManager();
         $em->persist($user);
         $em->flush();
+
+        return $this->mapToDomain($user);
+    }
+
+    public function updateDomainUser(DomainUser $domainUser): DomainUser
+    {
+        if (null === $domainUser->getId()) {
+            throw new \LogicException('Cannot update user without an id.');
+        }
+
+        $user = $this->find($domainUser->getId());
+
+        if (!$user instanceof User) {
+            throw new \RuntimeException(sprintf('User with id %d was not found.', $domainUser->getId()));
+        }
+
+        $this->updateOrmFromDomain($user, $domainUser);
+
+        $this->getEntityManager()->flush();
 
         return $this->mapToDomain($user);
     }
