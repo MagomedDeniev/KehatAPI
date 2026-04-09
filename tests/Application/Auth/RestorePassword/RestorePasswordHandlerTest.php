@@ -21,7 +21,7 @@ final class RestorePasswordHandlerTest extends TestCase
 
         $handler = new RestorePasswordHandler($passwordHasher, $repository);
 
-        $repository->expects($this->once())->method('findUserBy')->with(['passwordToken' => 'missing-token'])->willReturn(null);
+        $repository->expects($this->once())->method('findUserByPasswordToken')->with('missing-token')->willReturn(null);
         $passwordHasher->expects($this->never())->method('hash');
 
         $this->expectException(\DomainException::class);
@@ -39,8 +39,8 @@ final class RestorePasswordHandlerTest extends TestCase
 
         $repository
             ->expects($this->once())
-            ->method('findUserBy')
-            ->with(['passwordToken' => 'expired-token'])
+            ->method('findUserByPasswordToken')
+            ->with('expired-token')
             ->willReturn(UserFactory::domainUser(
                 passwordToken: 'expired-token',
                 passwordTokenExpiresAt: new \DateTimeImmutable('-1 hour'),
@@ -63,8 +63,8 @@ final class RestorePasswordHandlerTest extends TestCase
 
         $repository
             ->expects($this->once())
-            ->method('findUserBy')
-            ->with(['passwordToken' => 'valid-token'])
+            ->method('findUserByPasswordToken')
+            ->with('valid-token')
             ->willReturn(UserFactory::domainUser(
                 passwordToken: 'valid-token',
                 passwordTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
@@ -93,7 +93,7 @@ final class RestorePasswordHandlerTest extends TestCase
             passwordTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
         );
 
-        $repository->expects($this->once())->method('findUserBy')->with(['passwordToken' => 'valid-token'])->willReturn($user);
+        $repository->expects($this->once())->method('findUserByPasswordToken')->with('valid-token')->willReturn($user);
         $newHashedPassword = password_hash('12345678', PASSWORD_BCRYPT);
         $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn($newHashedPassword);
         $repository
@@ -121,7 +121,7 @@ final class RestorePasswordHandlerTest extends TestCase
 
         $handler = new RestorePasswordHandler($passwordHasher, $repository);
 
-        $repository->expects($this->once())->method('findUserBy')->willReturn(UserFactory::domainUser(
+        $repository->expects($this->once())->method('findUserByPasswordToken')->with('valid-token')->willReturn(UserFactory::domainUser(
             id: null,
             confirmedEmail: null,
             passwordToken: 'valid-token',

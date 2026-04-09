@@ -35,8 +35,8 @@ final class ForgotPasswordHandlerTest extends TestCase
 
         $repository
             ->expects($this->once())
-            ->method('findUserBy')
-            ->with(['email' => 'test.user@example.com'])
+            ->method('findUserByEmail')
+            ->with('test.user@example.com')
             ->willReturn($user);
 
         $tokenGenerator->expects($this->once())->method('generateToken')->willReturn(UserFactory::VALID_PASSWORD_TOKEN);
@@ -83,7 +83,7 @@ final class ForgotPasswordHandlerTest extends TestCase
             new MailerService($mailer, $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
         );
 
-        $repository->expects($this->once())->method('findUserBy')->with(['email' => 'user@example.com'])->willReturn(null);
+        $repository->expects($this->once())->method('findUserByEmail')->with('user@example.com')->willReturn(null);
         $tokenGenerator->expects($this->never())->method('generateToken');
         $repository->expects($this->never())->method('updateDomainUser');
         $mailer->expects($this->never())->method('send');
@@ -104,7 +104,7 @@ final class ForgotPasswordHandlerTest extends TestCase
             new MailerService($this->createMock(MailerInterface::class), $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
         );
 
-        $repository->expects($this->never())->method('findUserBy');
+        $repository->expects($this->never())->method('findUserByEmail');
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Email is not valid.');

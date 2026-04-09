@@ -21,7 +21,7 @@ final class ChangeMyPasswordHandlerTest extends TestCase
 
         $handler = new ChangeMyPasswordHandler($repository, $passwordHasher);
 
-        $repository->expects($this->never())->method('findUserBy');
+        $repository->expects($this->never())->method('findUserById');
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Password length must be between 8 and 4096 characters.');
@@ -36,7 +36,7 @@ final class ChangeMyPasswordHandlerTest extends TestCase
 
         $handler = new ChangeMyPasswordHandler($repository, $passwordHasher);
 
-        $repository->expects($this->once())->method('findUserBy')->with(['id' => 123])->willReturn(null);
+        $repository->expects($this->once())->method('findUserById')->with(123)->willReturn(null);
         $passwordHasher->expects($this->never())->method('verify');
 
         $this->expectException(\DomainException::class);
@@ -52,7 +52,7 @@ final class ChangeMyPasswordHandlerTest extends TestCase
 
         $handler = new ChangeMyPasswordHandler($repository, $passwordHasher);
 
-        $repository->expects($this->once())->method('findUserBy')->with(['id' => 1])->willReturn(UserFactory::domainUser(password: UserFactory::VALID_PASSWORD_HASH));
+        $repository->expects($this->once())->method('findUserById')->with(1)->willReturn(UserFactory::domainUser(password: UserFactory::VALID_PASSWORD_HASH));
         $passwordHasher->expects($this->once())->method('verify')->with(UserFactory::VALID_PASSWORD_HASH, 'wrong-password')->willReturn(false);
         $passwordHasher->expects($this->never())->method('hash');
         $repository->expects($this->never())->method('updateDomainUser');
@@ -77,7 +77,7 @@ final class ChangeMyPasswordHandlerTest extends TestCase
             passwordTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
         );
 
-        $repository->expects($this->once())->method('findUserBy')->with(['id' => 1])->willReturn($user);
+        $repository->expects($this->once())->method('findUserById')->with(1)->willReturn($user);
         $newHashedPassword = password_hash('12345678', PASSWORD_BCRYPT);
         $passwordHasher->expects($this->once())->method('verify')->with(UserFactory::VALID_PASSWORD_HASH, 'current-password')->willReturn(true);
         $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn($newHashedPassword);

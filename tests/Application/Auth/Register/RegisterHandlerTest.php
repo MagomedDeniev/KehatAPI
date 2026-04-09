@@ -34,15 +34,8 @@ final class RegisterHandlerTest extends TestCase
             new MailerService($mailer, $logger, 'no-reply@example.com', 'Kehat'),
         );
 
-        $lookupCalls = [];
-        $repository
-            ->expects($this->exactly(2))
-            ->method('findUserBy')
-            ->willReturnCallback(static function (array $criteria) use (&$lookupCalls): ?DomainUser {
-                $lookupCalls[] = $criteria;
-
-                return null;
-            });
+        $repository->expects($this->once())->method('findUserByEmail')->with('test.user@example.com')->willReturn(null);
+        $repository->expects($this->once())->method('findUserByUsername')->with('Test_User')->willReturn(null);
 
         $passwordHasher
             ->expects($this->once())
@@ -100,7 +93,6 @@ final class RegisterHandlerTest extends TestCase
 
         $result = $handler(new RegisterCommand('  Test.User@example.com ', ' Test_User ', '12345678'));
 
-        self::assertSame([['email' => 'test.user@example.com'], ['username' => 'Test_User']], $lookupCalls);
         self::assertSame(42, $result->userId);
         self::assertSame('test.user@example.com', $result->email);
         self::assertSame('User successfully registered, check your email for further instructions.', $result->message);
@@ -122,8 +114,8 @@ final class RegisterHandlerTest extends TestCase
 
         $repository
             ->expects($this->once())
-            ->method('findUserBy')
-            ->with(['email' => 'user@example.com'])
+            ->method('findUserByEmail')
+            ->with('user@example.com')
             ->willReturn(UserFactory::domainUser());
 
         $passwordHasher->expects($this->never())->method('hash');
@@ -151,16 +143,8 @@ final class RegisterHandlerTest extends TestCase
             new MailerService($mailer, $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
         );
 
-        $calls = 0;
-        $repository
-            ->expects($this->exactly(2))
-            ->method('findUserBy')
-            ->willReturnCallback(static function (array $criteria) use (&$calls): ?DomainUser {
-                ++$calls;
-                self::assertSame(1 === $calls ? ['email' => 'user@example.com'] : ['username' => 'username'], $criteria);
-
-                return 2 === $calls ? UserFactory::domainUser(username: 'username') : null;
-            });
+        $repository->expects($this->once())->method('findUserByEmail')->with('user@example.com')->willReturn(null);
+        $repository->expects($this->once())->method('findUserByUsername')->with('username')->willReturn(UserFactory::domainUser(username: 'username'));
 
         $passwordHasher->expects($this->never())->method('hash');
         $tokenGenerator->expects($this->never())->method('generateToken');
@@ -184,7 +168,8 @@ final class RegisterHandlerTest extends TestCase
             new MailerService($this->createMock(MailerInterface::class), $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
         );
 
-        $repository->expects($this->never())->method('findUserBy');
+        $repository->expects($this->never())->method('findUserByEmail');
+        $repository->expects($this->never())->method('findUserByUsername');
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Email is not valid.');
@@ -206,7 +191,8 @@ final class RegisterHandlerTest extends TestCase
             new MailerService($mailer, $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
         );
 
-        $repository->expects($this->exactly(2))->method('findUserBy')->willReturn(null);
+        $repository->expects($this->once())->method('findUserByEmail')->with('user@example.com')->willReturn(null);
+        $repository->expects($this->once())->method('findUserByUsername')->with('username')->willReturn(null);
         $passwordHasher->expects($this->never())->method('hash');
         $tokenGenerator->expects($this->never())->method('generateToken');
         $repository->expects($this->never())->method('createDomainUser');
@@ -232,7 +218,8 @@ final class RegisterHandlerTest extends TestCase
             new MailerService($mailer, $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
         );
 
-        $repository->expects($this->exactly(2))->method('findUserBy')->willReturn(null);
+        $repository->expects($this->once())->method('findUserByEmail')->with('user@example.com')->willReturn(null);
+        $repository->expects($this->once())->method('findUserByUsername')->with('username')->willReturn(null);
         $passwordHasher->expects($this->once())->method('hash')->willReturn(UserFactory::VALID_PASSWORD_HASH);
         $tokenGenerator->expects($this->once())->method('generateToken')->willReturn(UserFactory::VALID_EMAIL_TOKEN);
         $repository->expects($this->once())->method('createDomainUser')->willReturn(UserFactory::domainUser(

@@ -36,7 +36,8 @@ final class AuthControllersTest extends TestCase
         $tokenGenerator = $this->createMock(TokenGeneratorInterface::class);
         $mailer = $this->createMock(MailerInterface::class);
 
-        $repository->expects($this->exactly(2))->method('findUserBy')->willReturn(null);
+        $repository->expects($this->once())->method('findUserByEmail')->with('user@example.com')->willReturn(null);
+        $repository->expects($this->once())->method('findUserByUsername')->with('username')->willReturn(null);
         $passwordHasher->expects($this->once())->method('hash')->willReturn(UserFactory::VALID_PASSWORD_HASH);
         $tokenGenerator->expects($this->once())->method('generateToken')->willReturn(UserFactory::VALID_EMAIL_TOKEN);
         $repository->expects($this->once())->method('createDomainUser')->willReturn(UserFactory::domainUser(
@@ -78,7 +79,7 @@ final class AuthControllersTest extends TestCase
         $tokenGenerator = $this->createMock(TokenGeneratorInterface::class);
         $mailer = $this->createMock(MailerInterface::class);
 
-        $repository->expects($this->once())->method('findUserBy')->with(['email' => 'user@example.com'])->willReturn(null);
+        $repository->expects($this->once())->method('findUserByEmail')->with('user@example.com')->willReturn(null);
         $tokenGenerator->expects($this->never())->method('generateToken');
         $mailer->expects($this->never())->method('send');
 
@@ -110,7 +111,7 @@ final class AuthControllersTest extends TestCase
             passwordTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
         );
 
-        $repository->expects($this->once())->method('findUserBy')->with(['passwordToken' => 'valid-token'])->willReturn($user);
+        $repository->expects($this->once())->method('findUserByPasswordToken')->with('valid-token')->willReturn($user);
         $newHashedPassword = password_hash('12345678', PASSWORD_BCRYPT);
         $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn($newHashedPassword);
         $repository->expects($this->once())->method('updateDomainUser')->with($this->isInstanceOf(DomainUser::class))->willReturnCallback(static fn (DomainUser $updatedUser): DomainUser => $updatedUser);
@@ -139,7 +140,7 @@ final class AuthControllersTest extends TestCase
             emailTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
         );
 
-        $repository->expects($this->once())->method('findUserBy')->with(['emailToken' => 'valid-token'])->willReturn($user);
+        $repository->expects($this->once())->method('findUserByEmailToken')->with('valid-token')->willReturn($user);
         $repository->expects($this->once())->method('updateDomainUser')->with($this->isInstanceOf(DomainUser::class))->willReturnCallback(static fn (DomainUser $updatedUser): DomainUser => $updatedUser);
 
         $response = (new ConfirmEmailController())->confirmEmail(

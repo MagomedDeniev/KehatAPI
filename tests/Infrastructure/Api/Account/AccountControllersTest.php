@@ -32,15 +32,9 @@ final class AccountControllersTest extends TestCase
         $mailer = $this->createMock(MailerInterface::class);
         $currentDomainUser = UserFactory::domainUser(id: 5, email: 'user@example.com', confirmedEmail: 'user@example.com', username: 'old_name');
 
-        $repository
-            ->expects($this->exactly(3))
-            ->method('findUserBy')
-            ->willReturnCallback(static function (array $criteria) use ($currentDomainUser): ?DomainUser {
-                return match ($criteria) {
-                    ['id' => 5], ['email' => 'user@example.com'], ['username' => 'new_name'] => $currentDomainUser,
-                    default => null,
-                };
-            });
+        $repository->expects($this->once())->method('findUserById')->with(5)->willReturn($currentDomainUser);
+        $repository->expects($this->once())->method('findUserByEmail')->with('user@example.com')->willReturn($currentDomainUser);
+        $repository->expects($this->once())->method('findUserByUsername')->with('new_name')->willReturn($currentDomainUser);
 
         $tokenGenerator->expects($this->never())->method('generateToken');
         $mailer->expects($this->never())->method('send');
@@ -92,7 +86,7 @@ final class AccountControllersTest extends TestCase
         $domainUser = UserFactory::domainUser(id: 5, password: $storedHash);
         $newHashedPassword = password_hash('12345678', PASSWORD_BCRYPT);
 
-        $repository->expects($this->once())->method('findUserBy')->with(['id' => 5])->willReturn($domainUser);
+        $repository->expects($this->once())->method('findUserById')->with(5)->willReturn($domainUser);
         $passwordHasher->expects($this->once())->method('verify')->with($storedHash, 'current-password')->willReturn(true);
         $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn($newHashedPassword);
         $repository->expects($this->once())->method('updateDomainUser')->with($this->isInstanceOf(DomainUser::class))->willReturnCallback(static fn (DomainUser $user): DomainUser => $user);

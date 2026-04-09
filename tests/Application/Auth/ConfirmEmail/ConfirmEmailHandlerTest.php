@@ -18,7 +18,7 @@ final class ConfirmEmailHandlerTest extends TestCase
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
         $handler = new ConfirmEmailHandler($repository);
 
-        $repository->expects($this->once())->method('findUserBy')->with(['emailToken' => 'missing-token'])->willReturn(null);
+        $repository->expects($this->once())->method('findUserByEmailToken')->with('missing-token')->willReturn(null);
         $repository->expects($this->never())->method('updateDomainUser');
 
         $this->expectException(\DomainException::class);
@@ -34,8 +34,8 @@ final class ConfirmEmailHandlerTest extends TestCase
 
         $repository
             ->expects($this->once())
-            ->method('findUserBy')
-            ->with(['emailToken' => 'expired-token'])
+            ->method('findUserByEmailToken')
+            ->with('expired-token')
             ->willReturn(UserFactory::domainUser(
                 confirmedEmail: null,
                 emailToken: 'expired-token',
@@ -61,7 +61,7 @@ final class ConfirmEmailHandlerTest extends TestCase
             emailTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
         );
 
-        $repository->expects($this->once())->method('findUserBy')->with(['emailToken' => 'valid-token'])->willReturn($user);
+        $repository->expects($this->once())->method('findUserByEmailToken')->with('valid-token')->willReturn($user);
         $repository
             ->expects($this->once())
             ->method('updateDomainUser')

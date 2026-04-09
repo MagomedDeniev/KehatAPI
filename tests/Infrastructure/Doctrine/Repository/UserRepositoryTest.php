@@ -9,6 +9,7 @@ use App\Infrastructure\Doctrine\Entity\User;
 use App\Infrastructure\Doctrine\Repository\UserRepository;
 use App\Tests\Support\UserFactory;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -47,41 +48,43 @@ final class UserRepositoryTest extends TestCase
         self::assertSame('new-password', $user->getPassword());
     }
 
-    public function testFindUserByReturnsNullWhenOrmUserIsMissing(): void
+    #[DataProvider('findUserProvider')]
+    public function testFindUserReturnsNullWhenOrmUserIsMissing(string $method, string|int $value): void
     {
         $repository = new TestUserRepository($this->createMock(EntityManagerInterface::class));
         $repository->findOneByResult = null;
 
-        self::assertNull($repository->findUserByEmail('missing@example.com'));
+        self::assertNull($repository->{$method}($value));
     }
 
-    public function testFindUserByMapsOrmUserToDomainUser(): void
+    #[DataProvider('findUserProvider')]
+    public function testFindUserMapsOrmUserToDomainUser(string $method, string|int $value): void
     {
         $repository = new TestUserRepository($this->createMock(EntityManagerInterface::class));
         $repository->findOneByResult = UserFactory::ormUser(
             id: 9,
             email: 'user@example.com',
             confirmedEmail: 'user@example.com',
-            password: 'hashed-password',
+            password: UserFactory::VALID_PASSWORD_HASH,
             username: 'username',
             roles: ['ROLE_ADMIN'],
-            passwordToken: 'password-token',
+            passwordToken: UserFactory::VALID_PASSWORD_TOKEN,
             passwordTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
-            emailToken: 'email-token',
+            emailToken: UserFactory::VALID_EMAIL_TOKEN,
             emailTokenExpiresAt: new \DateTimeImmutable('+2 hours'),
         );
 
-        $user = $repository->findUserByEmail('user@example.com');
+        $user = $repository->{$method}($value);
 
         self::assertInstanceOf(DomainUser::class, $user);
         self::assertSame(9, $user->getId());
         self::assertSame('user@example.com', $user->getEmail());
         self::assertSame('user@example.com', $user->getConfirmedEmail());
-        self::assertSame('hashed-password', $user->getPassword());
+        self::assertSame(UserFactory::VALID_PASSWORD_HASH, $user->getPassword());
         self::assertSame('username', $user->getUsername());
         self::assertSame(['ROLE_ADMIN', 'ROLE_USER'], $user->getRoles());
-        self::assertSame('password-token', $user->getPasswordToken());
-        self::assertSame('email-token', $user->getEmailToken());
+        self::assertSame(UserFactory::VALID_PASSWORD_TOKEN, $user->getPasswordToken());
+        self::assertSame(UserFactory::VALID_EMAIL_TOKEN, $user->getEmailToken());
     }
 
     public function testCreateDomainUserRejectsDomainUserWithId(): void
@@ -103,12 +106,12 @@ final class UserRepositoryTest extends TestCase
             id: null,
             email: 'new@example.com',
             confirmedEmail: null,
-            password: 'hashed-password',
+            password: UserFactory::VALID_PASSWORD_HASH,
             username: 'new_user',
             roles: ['ROLE_ADMIN'],
-            passwordToken: 'password-token',
+            passwordToken: UserFactory::VALID_PASSWORD_TOKEN,
             passwordTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
-            emailToken: 'email-token',
+            emailToken: UserFactory::VALID_EMAIL_TOKEN,
             emailTokenExpiresAt: new \DateTimeImmutable('+2 hours'),
         );
 
@@ -118,11 +121,11 @@ final class UserRepositoryTest extends TestCase
             ->with($this->callback(static function (User $user): bool {
                 self::assertSame('new@example.com', $user->getEmail());
                 self::assertNull($user->getConfirmedEmail());
-                self::assertSame('hashed-password', $user->getPassword());
+                self::assertSame(UserFactory::VALID_PASSWORD_HASH, $user->getPassword());
                 self::assertSame('new_user', $user->getUsername());
                 self::assertSame(['ROLE_ADMIN', 'ROLE_USER'], $user->getRoles());
-                self::assertSame('password-token', $user->getPasswordToken());
-                self::assertSame('email-token', $user->getEmailToken());
+                self::assertSame(UserFactory::VALID_PASSWORD_TOKEN, $user->getPasswordToken());
+                self::assertSame(UserFactory::VALID_EMAIL_TOKEN, $user->getEmailToken());
 
                 UserFactory::forceId($user, 77);
 
@@ -136,7 +139,7 @@ final class UserRepositoryTest extends TestCase
         self::assertSame(77, $createdUser->getId());
         self::assertSame('new@example.com', $createdUser->getEmail());
         self::assertSame(['ROLE_ADMIN', 'ROLE_USER'], $createdUser->getRoles());
-        self::assertSame('email-token', $createdUser->getEmailToken());
+        self::assertSame(UserFactory::VALID_EMAIL_TOKEN, $createdUser->getEmailToken());
     }
 
     public function testUpdateDomainUserRejectsDomainUserWithoutId(): void
@@ -173,25 +176,37 @@ final class UserRepositoryTest extends TestCase
             id: 5,
             email: 'new@example.com',
             confirmedEmail: 'confirmed@example.com',
-            password: 'new-password',
+            password: UserFactory::VALID_PASSWORD_HASH_ALT,
             username: 'new_user',
             roles: ['ROLE_ADMIN'],
-            passwordToken: 'password-token',
+            passwordToken: UserFactory::VALID_PASSWORD_TOKEN,
             passwordTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
-            emailToken: 'email-token',
+            emailToken: UserFactory::VALID_EMAIL_TOKEN,
             emailTokenExpiresAt: new \DateTimeImmutable('+2 hours'),
         ));
 
         self::assertSame('new@example.com', $existingUser->getEmail());
         self::assertSame('confirmed@example.com', $existingUser->getConfirmedEmail());
-        self::assertSame('new-password', $existingUser->getPassword());
+        self::assertSame(UserFactory::VALID_PASSWORD_HASH_ALT, $existingUser->getPassword());
         self::assertSame('new_user', $existingUser->getUsername());
-        self::assertSame('password-token', $existingUser->getPasswordToken());
-        self::assertSame('email-token', $existingUser->getEmailToken());
+        self::assertSame(UserFactory::VALID_PASSWORD_TOKEN, $existingUser->getPasswordToken());
+        self::assertSame(UserFactory::VALID_EMAIL_TOKEN, $existingUser->getEmailToken());
 
         self::assertSame(5, $updatedUser->getId());
         self::assertSame('new@example.com', $updatedUser->getEmail());
         self::assertSame(['ROLE_ADMIN', 'ROLE_USER'], $updatedUser->getRoles());
+    }
+
+    /**
+     * @return iterable<string, array{0: string, 1: string|int}>
+     */
+    public static function findUserProvider(): iterable
+    {
+        yield 'by id' => ['findUserById', 9];
+        yield 'by email' => ['findUserByEmail', 'user@example.com'];
+        yield 'by username' => ['findUserByUsername', 'username'];
+        yield 'by email token' => ['findUserByEmailToken', UserFactory::VALID_EMAIL_TOKEN];
+        yield 'by password token' => ['findUserByPasswordToken', UserFactory::VALID_PASSWORD_TOKEN];
     }
 }
 

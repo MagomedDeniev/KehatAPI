@@ -27,7 +27,7 @@ final class ChangeMySettingsHandlerTest extends TestCase
             new MailerService($this->createMock(MailerInterface::class), $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
         );
 
-        $repository->expects($this->once())->method('findUserBy')->with(['id' => 99])->willReturn(null);
+        $repository->expects($this->once())->method('findUserById')->with(99)->willReturn(null);
         $repository->expects($this->never())->method('updateDomainUser');
 
         $this->expectException(\DomainException::class);
@@ -47,20 +47,10 @@ final class ChangeMySettingsHandlerTest extends TestCase
 
         $currentUser = UserFactory::domainUser(id: 10);
         $otherUser = UserFactory::domainUser(id: 11, email: 'new@example.com');
-        $calls = 0;
 
-        $repository
-            ->expects($this->exactly(2))
-            ->method('findUserBy')
-            ->willReturnCallback(static function (array $criteria) use (&$calls, $currentUser, $otherUser): ?DomainUser {
-                ++$calls;
-
-                return match ($calls) {
-                    1 => $currentUser,
-                    2 => $otherUser,
-                    default => null,
-                };
-            });
+        $repository->expects($this->once())->method('findUserById')->with(10)->willReturn($currentUser);
+        $repository->expects($this->once())->method('findUserByEmail')->with('new@example.com')->willReturn($otherUser);
+        $repository->expects($this->never())->method('findUserByUsername');
 
         $repository->expects($this->never())->method('updateDomainUser');
 
@@ -81,21 +71,9 @@ final class ChangeMySettingsHandlerTest extends TestCase
 
         $currentUser = UserFactory::domainUser(id: 10);
         $otherUser = UserFactory::domainUser(id: 11, username: 'new_name');
-        $calls = 0;
-
-        $repository
-            ->expects($this->exactly(3))
-            ->method('findUserBy')
-            ->willReturnCallback(static function (array $criteria) use (&$calls, $currentUser, $otherUser): ?DomainUser {
-                ++$calls;
-
-                return match ($calls) {
-                    1 => $currentUser,
-                    2 => null,
-                    3 => $otherUser,
-                    default => null,
-                };
-            });
+        $repository->expects($this->once())->method('findUserById')->with(10)->willReturn($currentUser);
+        $repository->expects($this->once())->method('findUserByEmail')->with('user@example.com')->willReturn(null);
+        $repository->expects($this->once())->method('findUserByUsername')->with('new_name')->willReturn($otherUser);
 
         $repository->expects($this->never())->method('updateDomainUser');
 
@@ -118,19 +96,9 @@ final class ChangeMySettingsHandlerTest extends TestCase
         );
 
         $currentUser = UserFactory::domainUser(id: 10, email: 'user@example.com', confirmedEmail: 'user@example.com', username: 'old_name');
-        $calls = 0;
-
-        $repository
-            ->expects($this->exactly(3))
-            ->method('findUserBy')
-            ->willReturnCallback(static function (array $criteria) use (&$calls, $currentUser): ?DomainUser {
-                ++$calls;
-
-                return match ($calls) {
-                    1, 2, 3 => $currentUser,
-                    default => null,
-                };
-            });
+        $repository->expects($this->once())->method('findUserById')->with(10)->willReturn($currentUser);
+        $repository->expects($this->once())->method('findUserByEmail')->with('user@example.com')->willReturn($currentUser);
+        $repository->expects($this->once())->method('findUserByUsername')->with('new_name')->willReturn($currentUser);
 
         $tokenGenerator->expects($this->never())->method('generateToken');
         $mailer->expects($this->never())->method('send');
@@ -173,19 +141,9 @@ final class ChangeMySettingsHandlerTest extends TestCase
             emailTokenExpiresAt: null,
         );
 
-        $calls = 0;
-        $repository
-            ->expects($this->exactly(3))
-            ->method('findUserBy')
-            ->willReturnCallback(static function (array $criteria) use (&$calls, $currentUser): ?DomainUser {
-                ++$calls;
-
-                return match ($calls) {
-                    1 => $currentUser,
-                    2, 3 => null,
-                    default => null,
-                };
-            });
+        $repository->expects($this->once())->method('findUserById')->with(10)->willReturn($currentUser);
+        $repository->expects($this->once())->method('findUserByEmail')->with('new@example.com')->willReturn(null);
+        $repository->expects($this->once())->method('findUserByUsername')->with('new_name')->willReturn(null);
 
         $tokenGenerator->expects($this->once())->method('generateToken')->willReturn(UserFactory::VALID_EMAIL_TOKEN);
 
@@ -229,7 +187,9 @@ final class ChangeMySettingsHandlerTest extends TestCase
             new MailerService($this->createMock(MailerInterface::class), $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
         );
 
-        $repository->expects($this->never())->method('findUserBy');
+        $repository->expects($this->never())->method('findUserById');
+        $repository->expects($this->never())->method('findUserByEmail');
+        $repository->expects($this->never())->method('findUserByUsername');
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Email is not valid.');
