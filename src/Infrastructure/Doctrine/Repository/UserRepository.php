@@ -37,12 +37,53 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->flush();
     }
 
-    /**
-     * @param array<string, mixed> $criteria
-     */
-    public function findUserBy(array $criteria): ?DomainUser
+    public function findUserById(int $id): ?DomainUser
     {
-        $user = $this->findOneBy($criteria);
+        $user = $this->findOneBy(['id' => $id]);
+
+        if (!$user instanceof User) {
+            return null;
+        }
+
+        return $this->mapToDomain($user);
+    }
+
+    public function findUserByEmail(string $email): ?DomainUser
+    {
+        $user = $this->findOneBy(['email' => $email]);
+
+        if (!$user instanceof User) {
+            return null;
+        }
+
+        return $this->mapToDomain($user);
+    }
+
+    public function findUserByUsername(string $username): ?DomainUser
+    {
+        $user = $this->findOneBy(['username' => $username]);
+
+        if (!$user instanceof User) {
+            return null;
+        }
+
+        return $this->mapToDomain($user);
+    }
+
+    public function findUserByEmailToken(string $emailToken): ?DomainUser
+    {
+        $user = $this->findOneBy(['emailToken' => $emailToken]);
+
+        if (!$user instanceof User) {
+            return null;
+        }
+
+        return $this->mapToDomain($user);
+    }
+
+    public function findUserByPasswordToken(string $passwordToken): ?DomainUser
+    {
+        $user = $this->findOneBy(['passwordToken' => $passwordToken]);
 
         if (!$user instanceof User) {
             return null;

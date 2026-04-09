@@ -16,7 +16,7 @@ final readonly class ConfirmEmailHandler
 
     public function __invoke(ConfirmEmailCommand $command): ConfirmEmailResult
     {
-        $user = $this->domainUserRepository->findUserBy(['emailToken' => $command->token]);
+        $user = $this->domainUserRepository->findUserByEmailToken($command->token);
 
         if (!$user instanceof DomainUser) {
             throw new \DomainException('Invalid email confirmation token.');

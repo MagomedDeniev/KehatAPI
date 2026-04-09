@@ -52,7 +52,7 @@ final class UserRepositoryTest extends TestCase
         $repository = new TestUserRepository($this->createMock(EntityManagerInterface::class));
         $repository->findOneByResult = null;
 
-        self::assertNull($repository->findUserBy(['email' => 'missing@example.com']));
+        self::assertNull($repository->findUserByEmail('missing@example.com'));
     }
 
     public function testFindUserByMapsOrmUserToDomainUser(): void
@@ -71,7 +71,7 @@ final class UserRepositoryTest extends TestCase
             emailTokenExpiresAt: new \DateTimeImmutable('+2 hours'),
         );
 
-        $user = $repository->findUserBy(['email' => 'user@example.com']);
+        $user = $repository->findUserByEmail('user@example.com');
 
         self::assertInstanceOf(DomainUser::class, $user);
         self::assertSame(9, $user->getId());

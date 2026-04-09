@@ -23,7 +23,7 @@ final readonly class ChangeMyPasswordHandler
         $currentPassword = $command->currentPassword;
         $newPassword = new Password($command->newPassword);
 
-        $user = $this->domainUserRepository->findUserBy(['id' => $command->userId]);
+        $user = $this->domainUserRepository->findUserById($command->userId);
 
         if (!$user instanceof DomainUser) {
             throw new \DomainException('User not found.');

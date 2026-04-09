@@ -35,11 +35,11 @@ final readonly class RegisterHandler
         $email = new Email($command->email);
         $username = new Username($command->username);
 
-        if ($this->domainUserRepository->findUserBy(['email' => (string) $email]) instanceof DomainUser) {
+        if ($this->domainUserRepository->findUserByEmail((string) $email) instanceof DomainUser) {
             throw new \DomainException('There is already an account with this email.');
         }
 
-        if ($this->domainUserRepository->findUserBy(['username' => (string) $username]) instanceof DomainUser) {
+        if ($this->domainUserRepository->findUserByUsername((string) $username) instanceof DomainUser) {
             throw new \DomainException('There is already an account with this username.');
         }
 

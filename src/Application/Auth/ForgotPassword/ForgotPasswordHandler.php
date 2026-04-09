@@ -28,7 +28,7 @@ final readonly class ForgotPasswordHandler
     public function __invoke(ForgotPasswordCommand $command): ForgotPasswordResult
     {
         $email = (string) new Email($command->email);
-        $user = $this->domainUserRepository->findUserBy(['email' => $email]);
+        $user = $this->domainUserRepository->findUserByEmail($email);
 
         if ($user instanceof DomainUser) {
             $token = new PasswordToken($this->tokenGenerator->generateToken());

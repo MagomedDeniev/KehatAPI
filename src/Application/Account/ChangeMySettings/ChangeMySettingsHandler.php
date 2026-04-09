@@ -31,18 +31,18 @@ final readonly class ChangeMySettingsHandler
         $email = new Email($command->email);
         $username = new Username($command->username);
 
-        $user = $this->domainUserRepository->findUserBy(['id' => $command->userId]);
+        $user = $this->domainUserRepository->findUserById($command->userId);
 
         if (!$user instanceof DomainUser) {
             throw new \DomainException('User not found.');
         }
 
-        $userByEmail = $this->domainUserRepository->findUserBy(['email' => (string) $email]);
+        $userByEmail = $this->domainUserRepository->findUserByEmail((string) $email);
         if ($userByEmail instanceof DomainUser && $userByEmail->getId() !== $user->getId()) {
             throw new \DomainException('There is already an account with this email.');
         }
 
-        $userByUsername = $this->domainUserRepository->findUserBy(['username' => (string) $username]);
+        $userByUsername = $this->domainUserRepository->findUserByUsername((string) $username);
         if ($userByUsername instanceof DomainUser && $userByUsername->getId() !== $user->getId()) {
             throw new \DomainException('There is already an account with this username.');
         }
