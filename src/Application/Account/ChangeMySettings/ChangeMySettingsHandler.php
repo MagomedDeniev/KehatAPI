@@ -7,6 +7,7 @@ namespace App\Application\Account\ChangeMySettings;
 use App\Domain\Entity\DomainUser;
 use App\Domain\Repository\DomainUserRepositoryInterface;
 use App\Domain\ValueObject\Email;
+use App\Domain\ValueObject\EmailToken;
 use App\Domain\ValueObject\TokenExpirationTime;
 use App\Domain\ValueObject\Username;
 use App\Infrastructure\Service\MailerService;
@@ -27,8 +28,8 @@ final readonly class ChangeMySettingsHandler
      */
     public function __invoke(ChangeMySettingsCommand $command): ChangeMySettingsResult
     {
-        $email = (string) (new Email($command->email));
-        $username = (string) (new Username($command->username));
+        $email = new Email($command->email);
+        $username = new Username($command->username);
 
         $user = $this->domainUserRepository->findUserBy(['id' => $command->userId]);
 
@@ -36,23 +37,24 @@ final readonly class ChangeMySettingsHandler
             throw new \DomainException('User not found.');
         }
 
-        $userByEmail = $this->domainUserRepository->findUserBy(['email' => $email]);
+        $userByEmail = $this->domainUserRepository->findUserBy(['email' => (string) $email]);
         if ($userByEmail instanceof DomainUser && $userByEmail->getId() !== $user->getId()) {
             throw new \DomainException('There is already an account with this email.');
         }
 
-        $userByUsername = $this->domainUserRepository->findUserBy(['username' => $username]);
+        $userByUsername = $this->domainUserRepository->findUserBy(['username' => (string) $username]);
         if ($userByUsername instanceof DomainUser && $userByUsername->getId() !== $user->getId()) {
             throw new \DomainException('There is already an account with this username.');
         }
 
         // Логика email такая, что подтвержденной почта считается если email = confirmedEmail
         // При изменении email, email должен сразу меняться, тем самым давая понять что email != confirmedEmail
-        if ($email === $user->getConfirmedEmail()) {
+        if ((string) $email === $user->getConfirmedEmail()) {
             $user->saveSettings($username, $email);
         } else {
+            $token = new EmailToken($this->tokenGenerator->generateToken());
             $tokenExpiresAt = new TokenExpirationTime();
-            $user->saveSettingsWithEmailUpdate($username, $email, $this->tokenGenerator->generateToken(), $tokenExpiresAt->value());
+            $user->saveSettingsWithEmailUpdate($username, $email, $token, $tokenExpiresAt);
 
             $this->mailerService->sendTemplate(
                 to: $user->getEmail(),

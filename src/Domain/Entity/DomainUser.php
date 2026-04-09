@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace App\Domain\Entity;
 
+use App\Domain\ValueObject\Email;
+use App\Domain\ValueObject\EmailToken;
+use App\Domain\ValueObject\HashedPassword;
+use App\Domain\ValueObject\PasswordToken;
+use App\Domain\ValueObject\TokenExpirationTime;
+use App\Domain\ValueObject\Username;
+
 final class DomainUser
 {
     /**
@@ -25,23 +32,23 @@ final class DomainUser
     }
 
     public static function register(
-        string $email,
-        string $password,
-        string $username,
-        string $emailToken,
-        \DateTimeImmutable $emailTokenExpiresAt,
+        Email $email,
+        HashedPassword $password,
+        Username $username,
+        EmailToken $emailToken,
+        TokenExpirationTime $emailTokenExpiresAt,
     ): self {
         return new self(
             id: null,
-            email: $email,
+            email: (string) $email,
             confirmedEmail: null,
-            password: $password,
-            username: $username,
+            password: (string) $password,
+            username: (string) $username,
             roles: ['ROLE_USER'],
             passwordToken: null,
             passwordTokenExpiresAt: null,
-            emailToken: $emailToken,
-            emailTokenExpiresAt: $emailTokenExpiresAt,
+            emailToken: (string) $emailToken,
+            emailTokenExpiresAt: $emailTokenExpiresAt->value(),
             registeredAt: new \DateTimeImmutable(),
         );
     }
@@ -71,30 +78,30 @@ final class DomainUser
         return $this->passwordTokenExpiresAt > new \DateTimeImmutable();
     }
 
-    public function assignPasswordToken(?string $token, ?\DateTimeImmutable $tokenExpiresAt): void
+    public function assignPasswordToken(PasswordToken $token, TokenExpirationTime $tokenExpiresAt): void
     {
-        $this->passwordToken = $token;
-        $this->passwordTokenExpiresAt = $tokenExpiresAt;
+        $this->passwordToken = (string) $token;
+        $this->passwordTokenExpiresAt = $tokenExpiresAt->value();
     }
 
-    public function changePassword(string $password): void
+    public function changePassword(HashedPassword $password): void
     {
-        $this->password = $password;
+        $this->password = (string) $password;
         $this->passwordToken = null;
         $this->passwordTokenExpiresAt = null;
     }
 
-    public function saveSettings(string $username, string $email): void
+    public function saveSettings(Username $username, Email $email): void
     {
-        $this->username = $username;
-        $this->email = $email;
+        $this->username = (string) $username;
+        $this->email = (string) $email;
     }
 
-    public function saveSettingsWithEmailUpdate(string $username, string $email, string $token, \DateTimeImmutable $tokenExpiresAt): void
+    public function saveSettingsWithEmailUpdate(Username $username, Email $email, EmailToken $token, TokenExpirationTime $tokenExpiresAt): void
     {
         $this->saveSettings($username, $email);
-        $this->emailToken = $token;
-        $this->emailTokenExpiresAt = $tokenExpiresAt;
+        $this->emailToken = (string) $token;
+        $this->emailTokenExpiresAt = $tokenExpiresAt->value();
     }
 
     public function getId(): ?int

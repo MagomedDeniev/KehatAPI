@@ -8,6 +8,8 @@ use App\Application\Contract\PasswordHasherInterface;
 use App\Domain\Entity\DomainUser;
 use App\Domain\Repository\DomainUserRepositoryInterface;
 use App\Domain\ValueObject\Email;
+use App\Domain\ValueObject\EmailToken;
+use App\Domain\ValueObject\HashedPassword;
 use App\Domain\ValueObject\Password;
 use App\Domain\ValueObject\TokenExpirationTime;
 use App\Domain\ValueObject\Username;
@@ -30,21 +32,21 @@ final readonly class RegisterHandler
      */
     public function __invoke(RegisterCommand $command): RegisterResult
     {
-        $email = (string) (new Email($command->email));
-        $username = (string) (new Username($command->username));
+        $email = new Email($command->email);
+        $username = new Username($command->username);
 
-        if ($this->domainUserRepository->findUserBy(['email' => $email]) instanceof DomainUser) {
+        if ($this->domainUserRepository->findUserBy(['email' => (string) $email]) instanceof DomainUser) {
             throw new \DomainException('There is already an account with this email.');
         }
 
-        if ($this->domainUserRepository->findUserBy(['username' => $username]) instanceof DomainUser) {
+        if ($this->domainUserRepository->findUserBy(['username' => (string) $username]) instanceof DomainUser) {
             throw new \DomainException('There is already an account with this username.');
         }
 
-        $password = (string) (new Password($command->password));
-        $hashedPassword = $this->passwordHasher->hash($password);
-        $emailToken = $this->tokenGenerator->generateToken();
-        $emailTokenExpiresAt = (new TokenExpirationTime())->value();
+        $password = new Password($command->password);
+        $hashedPassword = new HashedPassword($this->passwordHasher->hash((string) $password));
+        $emailToken = new EmailToken($this->tokenGenerator->generateToken());
+        $emailTokenExpiresAt = new TokenExpirationTime();
 
         $user = DomainUser::register(
             email: $email,

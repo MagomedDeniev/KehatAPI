@@ -7,6 +7,7 @@ namespace App\Application\Auth\RestorePassword;
 use App\Application\Contract\PasswordHasherInterface;
 use App\Domain\Entity\DomainUser;
 use App\Domain\Repository\DomainUserRepositoryInterface;
+use App\Domain\ValueObject\HashedPassword;
 use App\Domain\ValueObject\Password;
 
 final readonly class RestorePasswordHandler
@@ -30,7 +31,7 @@ final readonly class RestorePasswordHandler
         }
 
         $password = new Password($command->password);
-        $hashedPassword = $this->passwordHasher->hash((string) $password);
+        $hashedPassword = new HashedPassword($this->passwordHasher->hash((string) $password));
 
         $user->changePassword($hashedPassword);
         $this->domainUserRepository->updateDomainUser($user);
