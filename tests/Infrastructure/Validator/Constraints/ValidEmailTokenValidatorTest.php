@@ -14,6 +14,9 @@ use Symfony\Component\Validator\ConstraintValidatorInterface;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 use Symfony\Component\Validator\Test\ConstraintValidatorTestCase;
 
+/**
+ * @extends ConstraintValidatorTestCase<ValidEmailTokenValidator>
+ */
 final class ValidEmailTokenValidatorTest extends ConstraintValidatorTestCase
 {
     private UserRepository&MockObject $repository;

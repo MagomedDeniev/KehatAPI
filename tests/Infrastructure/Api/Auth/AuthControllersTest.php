@@ -37,15 +37,15 @@ final class AuthControllersTest extends TestCase
         $mailer = $this->createMock(MailerInterface::class);
 
         $repository->expects($this->exactly(2))->method('findUserBy')->willReturn(null);
-        $passwordHasher->expects($this->once())->method('hash')->willReturn('hashed-password');
-        $tokenGenerator->expects($this->once())->method('generateToken')->willReturn('email-token');
+        $passwordHasher->expects($this->once())->method('hash')->willReturn(UserFactory::VALID_PASSWORD_HASH);
+        $tokenGenerator->expects($this->once())->method('generateToken')->willReturn(UserFactory::VALID_EMAIL_TOKEN);
         $repository->expects($this->once())->method('createDomainUser')->willReturn(UserFactory::domainUser(
             id: 12,
             email: 'user@example.com',
             confirmedEmail: null,
-            password: 'hashed-password',
+            password: UserFactory::VALID_PASSWORD_HASH,
             username: 'username',
-            emailToken: 'email-token',
+            emailToken: UserFactory::VALID_EMAIL_TOKEN,
             emailTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
         ));
         $mailer->expects($this->once())->method('send');
@@ -111,7 +111,8 @@ final class AuthControllersTest extends TestCase
         );
 
         $repository->expects($this->once())->method('findUserBy')->with(['passwordToken' => 'valid-token'])->willReturn($user);
-        $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn('new-password');
+        $newHashedPassword = password_hash('12345678', PASSWORD_BCRYPT);
+        $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn($newHashedPassword);
         $repository->expects($this->once())->method('updateDomainUser')->with($this->isInstanceOf(DomainUser::class))->willReturnCallback(static fn (DomainUser $updatedUser): DomainUser => $updatedUser);
 
         $response = (new RestorePasswordController())->restorePassword(
@@ -156,12 +157,15 @@ final class AuthControllersTest extends TestCase
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<mixed>
      */
     private function decodeResponse(string|false $content): array
     {
         self::assertIsString($content);
 
-        return json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+        $decoded = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+        self::assertIsArray($decoded);
+
+        return $decoded;
     }
 }

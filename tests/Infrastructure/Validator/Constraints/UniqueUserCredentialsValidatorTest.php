@@ -17,6 +17,9 @@ use Symfony\Component\Validator\ConstraintValidatorInterface;
 use Symfony\Component\Validator\Exception\UnexpectedTypeException;
 use Symfony\Component\Validator\Test\ConstraintValidatorTestCase;
 
+/**
+ * @extends ConstraintValidatorTestCase<UniqueUserCredentialsValidator>
+ */
 final class UniqueUserCredentialsValidatorTest extends ConstraintValidatorTestCase
 {
     private UserRepository&MockObject $repository;

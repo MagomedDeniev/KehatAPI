@@ -88,18 +88,19 @@ final class RestorePasswordHandlerTest extends TestCase
 
         $user = UserFactory::domainUser(
             id: 15,
-            password: 'old-password',
+            password: UserFactory::VALID_PASSWORD_HASH,
             passwordToken: 'valid-token',
             passwordTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
         );
 
         $repository->expects($this->once())->method('findUserBy')->with(['passwordToken' => 'valid-token'])->willReturn($user);
-        $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn('new-hashed-password');
+        $newHashedPassword = password_hash('12345678', PASSWORD_BCRYPT);
+        $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn($newHashedPassword);
         $repository
             ->expects($this->once())
             ->method('updateDomainUser')
-            ->with($this->callback(static function (DomainUser $updatedUser): bool {
-                self::assertSame('new-hashed-password', $updatedUser->getPassword());
+            ->with($this->callback(static function (DomainUser $updatedUser) use ($newHashedPassword): bool {
+                self::assertSame($newHashedPassword, $updatedUser->getPassword());
                 self::assertNull($updatedUser->getPasswordToken());
                 self::assertNull($updatedUser->getPasswordTokenExpiresAt());
 
@@ -126,7 +127,8 @@ final class RestorePasswordHandlerTest extends TestCase
             passwordToken: 'valid-token',
             passwordTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
         ));
-        $passwordHasher->expects($this->once())->method('hash')->willReturn('new-hashed-password');
+        $newHashedPassword = password_hash('12345678', PASSWORD_BCRYPT);
+        $passwordHasher->expects($this->once())->method('hash')->willReturn($newHashedPassword);
         $repository->expects($this->once())->method('updateDomainUser')->willReturnCallback(static fn (DomainUser $updatedUser): DomainUser => $updatedUser);
 
         $this->expectException(\LogicException::class);

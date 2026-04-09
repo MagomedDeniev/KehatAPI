@@ -76,7 +76,7 @@ final class ApiExceptionSubscriberTest extends TestCase
         (new ApiExceptionSubscriber(new JsonResponder()))->onException($event);
 
         self::assertSame(422, $event->getResponse()?->getStatusCode());
-        self::assertSame('validation_failed', $this->decodeResponse($event)['error']['code']);
+        self::assertSame('validation_failed', $this->decodeError($event)['code']);
     }
 
     public function testItConvertsMailerTransportExceptions(): void
@@ -86,7 +86,7 @@ final class ApiExceptionSubscriberTest extends TestCase
         (new ApiExceptionSubscriber(new JsonResponder()))->onException($event);
 
         self::assertSame(503, $event->getResponse()?->getStatusCode());
-        self::assertSame('mail_delivery_failed', $this->decodeResponse($event)['error']['code']);
+        self::assertSame('mail_delivery_failed', $this->decodeError($event)['code']);
     }
 
     #[DataProvider('accessDeniedProvider')]
@@ -121,8 +121,10 @@ final class ApiExceptionSubscriberTest extends TestCase
 
         (new ApiExceptionSubscriber(new JsonResponder()))->onException($event);
 
-        self::assertSame(400, $event->getResponse()?->getStatusCode());
-        self::assertSame('1', $event->getResponse()?->headers->get('X-Test'));
+        $response = $event->getResponse();
+        self::assertSame(400, $response?->getStatusCode());
+        self::assertInstanceOf(\Symfony\Component\HttpFoundation\Response::class, $response);
+        self::assertSame('1', $response->headers->get('X-Test'));
         self::assertSame([
             'success' => false,
             'error' => [
@@ -139,7 +141,7 @@ final class ApiExceptionSubscriberTest extends TestCase
         (new ApiExceptionSubscriber(new JsonResponder()))->onException($event);
 
         self::assertSame(404, $event->getResponse()?->getStatusCode());
-        self::assertSame('Not Found', $this->decodeResponse($event)['error']['message']);
+        self::assertSame('Not Found', $this->decodeError($event)['message']);
     }
 
     public function testItConvertsUniqueConstraintViolationExceptions(): void
@@ -156,7 +158,7 @@ final class ApiExceptionSubscriberTest extends TestCase
         (new ApiExceptionSubscriber(new JsonResponder()))->onException($event);
 
         self::assertSame(409, $event->getResponse()?->getStatusCode());
-        self::assertSame('unique_constraint_violation', $this->decodeResponse($event)['error']['code']);
+        self::assertSame('unique_constraint_violation', $this->decodeError($event)['code']);
     }
 
     public function testItConvertsInvalidArgumentExceptions(): void
@@ -166,8 +168,8 @@ final class ApiExceptionSubscriberTest extends TestCase
         (new ApiExceptionSubscriber(new JsonResponder()))->onException($event);
 
         self::assertSame(422, $event->getResponse()?->getStatusCode());
-        self::assertSame('invalid_argument', $this->decodeResponse($event)['error']['code']);
-        self::assertSame('Invalid email.', $this->decodeResponse($event)['error']['message']);
+        self::assertSame('invalid_argument', $this->decodeError($event)['code']);
+        self::assertSame('Invalid email.', $this->decodeError($event)['message']);
     }
 
     public function testItConvertsDomainExceptions(): void
@@ -177,8 +179,8 @@ final class ApiExceptionSubscriberTest extends TestCase
         (new ApiExceptionSubscriber(new JsonResponder()))->onException($event);
 
         self::assertSame(422, $event->getResponse()?->getStatusCode());
-        self::assertSame('domain_error', $this->decodeResponse($event)['error']['code']);
-        self::assertSame('Business rule failed.', $this->decodeResponse($event)['error']['message']);
+        self::assertSame('domain_error', $this->decodeError($event)['code']);
+        self::assertSame('Business rule failed.', $this->decodeError($event)['message']);
     }
 
     public function testItConvertsUnknownExceptionsToInternalError(): void
@@ -211,13 +213,51 @@ final class ApiExceptionSubscriberTest extends TestCase
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<mixed>
      */
     private function decodeResponse(ExceptionEvent $event): array
     {
-        $content = $event->getResponse()?->getContent();
+        $response = $event->getResponse();
+        self::assertNotNull($response);
+
+        $content = $response->getContent();
         self::assertIsString($content);
 
-        return json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+        $decoded = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+        self::assertIsArray($decoded);
+
+        return $decoded;
+    }
+
+    /**
+     * @return array{
+     *     code: string,
+     *     message: string,
+     *     fields?: list<array{field: string, message: string}>
+     * }
+     */
+    private function decodeError(ExceptionEvent $event): array
+    {
+        $payload = $this->decodeResponse($event);
+        self::assertArrayHasKey('error', $payload);
+        self::assertIsArray($payload['error']);
+        self::assertArrayHasKey('code', $payload['error']);
+        self::assertArrayHasKey('message', $payload['error']);
+        self::assertIsString($payload['error']['code']);
+        self::assertIsString($payload['error']['message']);
+
+        $error = [
+            'code' => $payload['error']['code'],
+            'message' => $payload['error']['message'],
+        ];
+
+        if (array_key_exists('fields', $payload['error'])) {
+            self::assertIsArray($payload['error']['fields']);
+            /** @var list<array{field: string, message: string}> $fields */
+            $fields = $payload['error']['fields'];
+            $error['fields'] = $fields;
+        }
+
+        return $error;
     }
 }

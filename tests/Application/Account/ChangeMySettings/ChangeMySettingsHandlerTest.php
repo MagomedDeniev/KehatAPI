@@ -187,7 +187,7 @@ final class ChangeMySettingsHandlerTest extends TestCase
                 };
             });
 
-        $tokenGenerator->expects($this->once())->method('generateToken')->willReturn('email-token');
+        $tokenGenerator->expects($this->once())->method('generateToken')->willReturn(UserFactory::VALID_EMAIL_TOKEN);
 
         $mailer
             ->expects($this->once())
@@ -207,7 +207,7 @@ final class ChangeMySettingsHandlerTest extends TestCase
                 self::assertSame('new_name', $updatedUser->getUsername());
                 self::assertSame('new@example.com', $updatedUser->getEmail());
                 self::assertSame('old@example.com', $updatedUser->getConfirmedEmail());
-                self::assertSame('email-token', $updatedUser->getEmailToken());
+                self::assertSame(UserFactory::VALID_EMAIL_TOKEN, $updatedUser->getEmailToken());
                 self::assertGreaterThan(time(), $updatedUser->getEmailTokenExpiresAt()?->getTimestamp() ?? 0);
 
                 return true;

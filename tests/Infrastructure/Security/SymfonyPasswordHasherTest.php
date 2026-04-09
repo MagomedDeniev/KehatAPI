@@ -20,7 +20,7 @@ final class SymfonyPasswordHasherTest extends TestCase
             ->expects($this->once())
             ->method('hashPassword')
             ->with(
-                $this->callback(static fn (User $user): bool => $user instanceof User),
+                $this->callback(static fn (User $user): bool => true),
                 'plain-password',
             )
             ->willReturn('hashed-password');

@@ -197,7 +197,7 @@ final class UserRepositoryTest extends TestCase
 
 final class UnsupportedPasswordUser implements PasswordAuthenticatedUserInterface
 {
-    public function getPassword(): ?string
+    public function getPassword(): string
     {
         return 'password';
     }
@@ -205,20 +205,22 @@ final class UnsupportedPasswordUser implements PasswordAuthenticatedUserInterfac
 
 final class TestUserRepository extends UserRepository
 {
-    public object|null $findOneByResult = null;
-    public object|null $findResult = null;
+    public ?User $findOneByResult = null;
+    public ?User $findResult = null;
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
-    public function findOneBy(array $criteria, array|null $orderBy = null): object|null
+    /** @phpstan-ignore impureMethod.pure */
+    public function findOneBy(array $criteria, ?array $orderBy = null): ?User
     {
         return $this->findOneByResult;
     }
 
-    public function find(mixed $id, \Doctrine\DBAL\LockMode|int|null $lockMode = null, int|null $lockVersion = null): object|null
+    /** @phpstan-ignore impureMethod.pure */
+    public function find(mixed $id, \Doctrine\DBAL\LockMode|int|null $lockMode = null, ?int $lockVersion = null): ?User
     {
         return $this->findResult;
     }

@@ -52,8 +52,8 @@ final class ChangeMyPasswordHandlerTest extends TestCase
 
         $handler = new ChangeMyPasswordHandler($repository, $passwordHasher);
 
-        $repository->expects($this->once())->method('findUserBy')->with(['id' => 1])->willReturn(UserFactory::domainUser(password: 'hashed-password'));
-        $passwordHasher->expects($this->once())->method('verify')->with('hashed-password', 'wrong-password')->willReturn(false);
+        $repository->expects($this->once())->method('findUserBy')->with(['id' => 1])->willReturn(UserFactory::domainUser(password: UserFactory::VALID_PASSWORD_HASH));
+        $passwordHasher->expects($this->once())->method('verify')->with(UserFactory::VALID_PASSWORD_HASH, 'wrong-password')->willReturn(false);
         $passwordHasher->expects($this->never())->method('hash');
         $repository->expects($this->never())->method('updateDomainUser');
 
@@ -72,19 +72,20 @@ final class ChangeMyPasswordHandlerTest extends TestCase
 
         $user = UserFactory::domainUser(
             id: 1,
-            password: 'hashed-password',
-            passwordToken: 'reset-token',
+            password: UserFactory::VALID_PASSWORD_HASH,
+            passwordToken: UserFactory::VALID_PASSWORD_TOKEN,
             passwordTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
         );
 
         $repository->expects($this->once())->method('findUserBy')->with(['id' => 1])->willReturn($user);
-        $passwordHasher->expects($this->once())->method('verify')->with('hashed-password', 'current-password')->willReturn(true);
-        $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn('new-hashed-password');
+        $newHashedPassword = password_hash('12345678', PASSWORD_BCRYPT);
+        $passwordHasher->expects($this->once())->method('verify')->with(UserFactory::VALID_PASSWORD_HASH, 'current-password')->willReturn(true);
+        $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn($newHashedPassword);
         $repository
             ->expects($this->once())
             ->method('updateDomainUser')
-            ->with($this->callback(static function (DomainUser $updatedUser): bool {
-                self::assertSame('new-hashed-password', $updatedUser->getPassword());
+            ->with($this->callback(static function (DomainUser $updatedUser) use ($newHashedPassword): bool {
+                self::assertSame($newHashedPassword, $updatedUser->getPassword());
                 self::assertNull($updatedUser->getPasswordToken());
                 self::assertNull($updatedUser->getPasswordTokenExpiresAt());
 

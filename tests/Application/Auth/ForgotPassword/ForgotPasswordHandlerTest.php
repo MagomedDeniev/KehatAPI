@@ -39,13 +39,13 @@ final class ForgotPasswordHandlerTest extends TestCase
             ->with(['email' => 'test.user@example.com'])
             ->willReturn($user);
 
-        $tokenGenerator->expects($this->once())->method('generateToken')->willReturn('password-token');
+        $tokenGenerator->expects($this->once())->method('generateToken')->willReturn(UserFactory::VALID_PASSWORD_TOKEN);
 
         $repository
             ->expects($this->once())
             ->method('updateDomainUser')
             ->with($this->callback(static function (DomainUser $updatedUser): bool {
-                self::assertSame('password-token', $updatedUser->getPasswordToken());
+                self::assertSame(UserFactory::VALID_PASSWORD_TOKEN, $updatedUser->getPasswordToken());
                 self::assertGreaterThan(time(), $updatedUser->getPasswordTokenExpiresAt()?->getTimestamp() ?? 0);
 
                 return true;

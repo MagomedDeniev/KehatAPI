@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace App\Tests\Domain\Entity;
 
 use App\Domain\Entity\DomainUser;
+use App\Domain\ValueObject\Email;
+use App\Domain\ValueObject\EmailToken;
+use App\Domain\ValueObject\HashedPassword;
+use App\Domain\ValueObject\PasswordToken;
+use App\Domain\ValueObject\TokenExpirationTime;
+use App\Domain\ValueObject\Username;
 use App\Tests\Support\UserFactory;
 use PHPUnit\Framework\TestCase;
 
@@ -12,26 +18,26 @@ final class DomainUserTest extends TestCase
 {
     public function testRegisterCreatesDefaultState(): void
     {
-        $expiresAt = new \DateTimeImmutable('+1 hour');
+        $emailTokenExpiresAt = new TokenExpirationTime();
 
         $user = DomainUser::register(
-            email: 'user@example.com',
-            password: 'hashed-password',
-            username: 'username',
-            emailToken: 'email-token',
-            emailTokenExpiresAt: $expiresAt,
+            email: new Email('user@example.com'),
+            password: new HashedPassword(UserFactory::VALID_PASSWORD_HASH),
+            username: new Username('username'),
+            emailToken: new EmailToken(UserFactory::VALID_EMAIL_TOKEN),
+            emailTokenExpiresAt: $emailTokenExpiresAt,
         );
 
         self::assertNull($user->getId());
         self::assertSame('user@example.com', $user->getEmail());
         self::assertNull($user->getConfirmedEmail());
-        self::assertSame('hashed-password', $user->getPassword());
+        self::assertSame(UserFactory::VALID_PASSWORD_HASH, $user->getPassword());
         self::assertSame('username', $user->getUsername());
         self::assertSame(['ROLE_USER'], $user->getRoles());
         self::assertNull($user->getPasswordToken());
         self::assertNull($user->getPasswordTokenExpiresAt());
-        self::assertSame('email-token', $user->getEmailToken());
-        self::assertSame($expiresAt, $user->getEmailTokenExpiresAt());
+        self::assertSame(UserFactory::VALID_EMAIL_TOKEN, $user->getEmailToken());
+        self::assertSame($emailTokenExpiresAt->value(), $user->getEmailTokenExpiresAt());
         self::assertLessThanOrEqual(2, abs($user->getRegisteredAt()->getTimestamp() - time()));
     }
 
@@ -40,7 +46,7 @@ final class DomainUserTest extends TestCase
         $user = UserFactory::domainUser(
             email: 'user@example.com',
             confirmedEmail: null,
-            emailToken: 'email-token',
+            emailToken: UserFactory::VALID_EMAIL_TOKEN,
             emailTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
         );
 
@@ -54,41 +60,42 @@ final class DomainUserTest extends TestCase
     public function testEmailTokenValidationChecksPresenceAndExpiry(): void
     {
         self::assertFalse(UserFactory::domainUser(emailToken: null, emailTokenExpiresAt: new \DateTimeImmutable('+1 hour'))->hasValidEmailToken());
-        self::assertFalse(UserFactory::domainUser(emailToken: 'token', emailTokenExpiresAt: null)->hasValidEmailToken());
-        self::assertFalse(UserFactory::domainUser(emailToken: 'token', emailTokenExpiresAt: new \DateTimeImmutable('-1 hour'))->hasValidEmailToken());
-        self::assertTrue(UserFactory::domainUser(emailToken: 'token', emailTokenExpiresAt: new \DateTimeImmutable('+1 hour'))->hasValidEmailToken());
+        self::assertFalse(UserFactory::domainUser(emailToken: UserFactory::VALID_EMAIL_TOKEN, emailTokenExpiresAt: null)->hasValidEmailToken());
+        self::assertFalse(UserFactory::domainUser(emailToken: UserFactory::VALID_EMAIL_TOKEN, emailTokenExpiresAt: new \DateTimeImmutable('-1 hour'))->hasValidEmailToken());
+        self::assertTrue(UserFactory::domainUser(emailToken: UserFactory::VALID_EMAIL_TOKEN, emailTokenExpiresAt: new \DateTimeImmutable('+1 hour'))->hasValidEmailToken());
     }
 
     public function testPasswordTokenValidationChecksPresenceAndExpiry(): void
     {
         self::assertFalse(UserFactory::domainUser(passwordToken: null, passwordTokenExpiresAt: new \DateTimeImmutable('+1 hour'))->hasValidPasswordToken());
-        self::assertFalse(UserFactory::domainUser(passwordToken: 'token', passwordTokenExpiresAt: null)->hasValidPasswordToken());
-        self::assertFalse(UserFactory::domainUser(passwordToken: 'token', passwordTokenExpiresAt: new \DateTimeImmutable('-1 hour'))->hasValidPasswordToken());
-        self::assertTrue(UserFactory::domainUser(passwordToken: 'token', passwordTokenExpiresAt: new \DateTimeImmutable('+1 hour'))->hasValidPasswordToken());
+        self::assertFalse(UserFactory::domainUser(passwordToken: UserFactory::VALID_PASSWORD_TOKEN, passwordTokenExpiresAt: null)->hasValidPasswordToken());
+        self::assertFalse(UserFactory::domainUser(passwordToken: UserFactory::VALID_PASSWORD_TOKEN, passwordTokenExpiresAt: new \DateTimeImmutable('-1 hour'))->hasValidPasswordToken());
+        self::assertTrue(UserFactory::domainUser(passwordToken: UserFactory::VALID_PASSWORD_TOKEN, passwordTokenExpiresAt: new \DateTimeImmutable('+1 hour'))->hasValidPasswordToken());
     }
 
     public function testAssignPasswordTokenStoresTokenAndExpiration(): void
     {
         $user = UserFactory::domainUser(passwordToken: null, passwordTokenExpiresAt: null);
-        $expiresAt = new \DateTimeImmutable('+30 minutes');
+        $expiresAt = new TokenExpirationTime();
 
-        $user->assignPasswordToken('password-token', $expiresAt);
+        $user->assignPasswordToken(new PasswordToken(UserFactory::VALID_PASSWORD_TOKEN), $expiresAt);
 
-        self::assertSame('password-token', $user->getPasswordToken());
-        self::assertSame($expiresAt, $user->getPasswordTokenExpiresAt());
+        self::assertSame(UserFactory::VALID_PASSWORD_TOKEN, $user->getPasswordToken());
+        self::assertSame($expiresAt->value(), $user->getPasswordTokenExpiresAt());
     }
 
     public function testChangePasswordUpdatesPasswordAndClearsResetToken(): void
     {
         $user = UserFactory::domainUser(
-            password: 'old-password',
-            passwordToken: 'password-token',
+            password: UserFactory::VALID_PASSWORD_HASH,
+            passwordToken: UserFactory::VALID_PASSWORD_TOKEN,
             passwordTokenExpiresAt: new \DateTimeImmutable('+30 minutes'),
         );
 
-        $user->changePassword('new-password');
+        $newHashedPassword = password_hash('new-password', PASSWORD_BCRYPT);
+        $user->changePassword(new HashedPassword($newHashedPassword));
 
-        self::assertSame('new-password', $user->getPassword());
+        self::assertSame($newHashedPassword, $user->getPassword());
         self::assertNull($user->getPasswordToken());
         self::assertNull($user->getPasswordTokenExpiresAt());
     }
@@ -97,7 +104,7 @@ final class DomainUserTest extends TestCase
     {
         $user = UserFactory::domainUser(email: 'old@example.com', username: 'old_name');
 
-        $user->saveSettings('new_name', 'new@example.com');
+        $user->saveSettings(new Username('new_name'), new Email('new@example.com'));
 
         self::assertSame('new_name', $user->getUsername());
         self::assertSame('new@example.com', $user->getEmail());
@@ -106,14 +113,19 @@ final class DomainUserTest extends TestCase
     public function testSaveSettingsWithEmailUpdateAlsoStoresNewEmailToken(): void
     {
         $user = UserFactory::domainUser(email: 'old@example.com', username: 'old_name');
-        $expiresAt = new \DateTimeImmutable('+1 hour');
+        $expiresAt = new TokenExpirationTime();
 
-        $user->saveSettingsWithEmailUpdate('new_name', 'new@example.com', 'new-token', $expiresAt);
+        $user->saveSettingsWithEmailUpdate(
+            new Username('new_name'),
+            new Email('new@example.com'),
+            new EmailToken(UserFactory::VALID_EMAIL_TOKEN_ALT),
+            $expiresAt,
+        );
 
         self::assertSame('new_name', $user->getUsername());
         self::assertSame('new@example.com', $user->getEmail());
-        self::assertSame('new-token', $user->getEmailToken());
-        self::assertSame($expiresAt, $user->getEmailTokenExpiresAt());
+        self::assertSame(UserFactory::VALID_EMAIL_TOKEN_ALT, $user->getEmailToken());
+        self::assertSame($expiresAt->value(), $user->getEmailTokenExpiresAt());
     }
 
     public function testGetRolesAlwaysContainsSingleRoleUser(): void

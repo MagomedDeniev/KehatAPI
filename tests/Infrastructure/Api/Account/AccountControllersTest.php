@@ -88,15 +88,17 @@ final class AccountControllersTest extends TestCase
     {
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
         $passwordHasher = $this->createMock(PasswordHasherInterface::class);
-        $domainUser = UserFactory::domainUser(id: 5, password: 'stored-hash');
+        $storedHash = password_hash('current-password', PASSWORD_BCRYPT);
+        $domainUser = UserFactory::domainUser(id: 5, password: $storedHash);
+        $newHashedPassword = password_hash('12345678', PASSWORD_BCRYPT);
 
         $repository->expects($this->once())->method('findUserBy')->with(['id' => 5])->willReturn($domainUser);
-        $passwordHasher->expects($this->once())->method('verify')->with('stored-hash', 'current-password')->willReturn(true);
-        $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn('new-password');
+        $passwordHasher->expects($this->once())->method('verify')->with($storedHash, 'current-password')->willReturn(true);
+        $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn($newHashedPassword);
         $repository->expects($this->once())->method('updateDomainUser')->with($this->isInstanceOf(DomainUser::class))->willReturnCallback(static fn (DomainUser $user): DomainUser => $user);
 
         $response = (new ChangeMyPasswordController())->changePassword(
-            UserFactory::ormUser(id: 5, password: 'stored-hash'),
+            UserFactory::ormUser(id: 5, password: $storedHash),
             new ChangeMyPasswordRequest('current-password', '12345678'),
             new ChangeMyPasswordHandler($repository, $passwordHasher),
             new JsonResponder(),
@@ -155,12 +157,15 @@ final class AccountControllersTest extends TestCase
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<mixed>
      */
     private function decodeResponse(string|false $content): array
     {
         self::assertIsString($content);
 
-        return json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+        $decoded = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+        self::assertIsArray($decoded);
+
+        return $decoded;
     }
 }

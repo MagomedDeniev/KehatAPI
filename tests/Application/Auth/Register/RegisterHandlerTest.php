@@ -48,12 +48,12 @@ final class RegisterHandlerTest extends TestCase
             ->expects($this->once())
             ->method('hash')
             ->with('12345678')
-            ->willReturn('hashed-password');
+            ->willReturn(UserFactory::VALID_PASSWORD_HASH);
 
         $tokenGenerator
             ->expects($this->once())
             ->method('generateToken')
-            ->willReturn('email-token');
+            ->willReturn(UserFactory::VALID_EMAIL_TOKEN);
 
         $repository
             ->expects($this->once())
@@ -62,8 +62,8 @@ final class RegisterHandlerTest extends TestCase
                 self::assertNull($user->getId());
                 self::assertSame('test.user@example.com', $user->getEmail());
                 self::assertSame('Test_User', $user->getUsername());
-                self::assertSame('hashed-password', $user->getPassword());
-                self::assertSame('email-token', $user->getEmailToken());
+                self::assertSame(UserFactory::VALID_PASSWORD_HASH, $user->getPassword());
+                self::assertSame(UserFactory::VALID_EMAIL_TOKEN, $user->getEmailToken());
                 self::assertNull($user->getConfirmedEmail());
                 self::assertGreaterThan(time(), $user->getEmailTokenExpiresAt()?->getTimestamp() ?? 0);
 
@@ -157,7 +157,7 @@ final class RegisterHandlerTest extends TestCase
             ->method('findUserBy')
             ->willReturnCallback(static function (array $criteria) use (&$calls): ?DomainUser {
                 ++$calls;
-                self::assertSame($calls === 1 ? ['email' => 'user@example.com'] : ['username' => 'username'], $criteria);
+                self::assertSame(1 === $calls ? ['email' => 'user@example.com'] : ['username' => 'username'], $criteria);
 
                 return 2 === $calls ? UserFactory::domainUser(username: 'username') : null;
             });
@@ -233,12 +233,12 @@ final class RegisterHandlerTest extends TestCase
         );
 
         $repository->expects($this->exactly(2))->method('findUserBy')->willReturn(null);
-        $passwordHasher->expects($this->once())->method('hash')->willReturn('hashed-password');
-        $tokenGenerator->expects($this->once())->method('generateToken')->willReturn('email-token');
+        $passwordHasher->expects($this->once())->method('hash')->willReturn(UserFactory::VALID_PASSWORD_HASH);
+        $tokenGenerator->expects($this->once())->method('generateToken')->willReturn(UserFactory::VALID_EMAIL_TOKEN);
         $repository->expects($this->once())->method('createDomainUser')->willReturn(UserFactory::domainUser(
             id: null,
             confirmedEmail: null,
-            emailToken: 'email-token',
+            emailToken: UserFactory::VALID_EMAIL_TOKEN,
             emailTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
         ));
         $mailer->expects($this->once())->method('send');
