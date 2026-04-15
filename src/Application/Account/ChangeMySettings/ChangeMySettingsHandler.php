@@ -47,6 +47,14 @@ final readonly class ChangeMySettingsHandler
             throw new \DomainException('There is already an account with this username.');
         }
 
+        // Email может быть и не подтвержденным (не путать с confirmedEmail), поэтому проверяем меняется ли Email
+        // Это нужно знать как минимум для выдачи нового токена на фронте, в случае если почта изменена
+        if ((string) $email === $user->getEmail()) {
+            $emailUpdated = false;
+        } else {
+            $emailUpdated = true;
+        }
+
         // Логика email такая, что подтвержденной почта считается если email = confirmedEmail
         // При изменении email, email должен сразу меняться, тем самым давая понять что email != confirmedEmail
         if ((string) $email === $user->getConfirmedEmail()) {
@@ -67,7 +75,8 @@ final readonly class ChangeMySettingsHandler
         $this->domainUserRepository->updateDomainUser($user);
 
         return new ChangeMySettingsResult(
-            message: 'Your settings updated successfully.'
+            message: 'Your settings updated successfully.',
+            emailUpdated: $emailUpdated
         );
     }
 }

@@ -8,6 +8,7 @@ final readonly class ChangeMySettingsResult
 {
     public function __construct(
         public string $message,
+        public bool $emailUpdated,
     ) {
     }
 }
