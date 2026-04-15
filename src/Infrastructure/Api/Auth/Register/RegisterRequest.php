@@ -14,6 +14,12 @@ final readonly class RegisterRequest
         #[Compound\Username]
         public string $username,
 
+        #[Compound\Gender]
+        public string $gender,
+
+        #[Compound\BirthDate]
+        public string $birthDate,
+
         #[Compound\Email]
         public string $email,
 

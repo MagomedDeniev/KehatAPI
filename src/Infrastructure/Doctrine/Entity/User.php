@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Doctrine\Entity;
 
+use App\Domain\Enum\GenderEnum;
 use App\Infrastructure\Doctrine\Repository\UserRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -48,6 +50,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column]
     private \DateTimeImmutable $registeredAt;
+
+    #[ORM\Column(enumType: GenderEnum::class)]
+    private GenderEnum $gender;
+
+    #[ORM\Column(type: Types::DATE_IMMUTABLE)]
+    private \DateTimeImmutable $birthDate;
 
     public function tokenIsValid(mixed $token, string $type): bool
     {
@@ -223,6 +231,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmailTokenExpiresAt(?\DateTimeImmutable $emailTokenExpiresAt): static
     {
         $this->emailTokenExpiresAt = $emailTokenExpiresAt;
+
+        return $this;
+    }
+
+    public function getGender(): GenderEnum
+    {
+        return $this->gender;
+    }
+
+    public function setGender(GenderEnum $gender): static
+    {
+        $this->gender = $gender;
+
+        return $this;
+    }
+
+    public function getBirthDate(): \DateTimeImmutable
+    {
+        return $this->birthDate;
+    }
+
+    public function setBirthDate(\DateTimeImmutable $birthDate): static
+    {
+        $this->birthDate = $birthDate;
 
         return $this;
     }

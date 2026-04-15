@@ -56,6 +56,8 @@ security:
         - { path: ^/api/forgot/password$, roles: PUBLIC_ACCESS }
         - { path: ^/api/restore/password$, roles: PUBLIC_ACCESS }
         - { path: ^/api/confirm/email$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/users/profile/[^/]+$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/check/token$, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: ROLE_USER }
 
 when@test:

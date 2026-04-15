@@ -19,7 +19,7 @@ final class RestorePasswordController extends AbstractController
     {
         $result = $handler(new RestorePasswordCommand(
             token: $restorePasswordRequest->token,
-            password: $restorePasswordRequest->newPassword
+            password: $restorePasswordRequest->password
         ));
 
         return $responder->success(

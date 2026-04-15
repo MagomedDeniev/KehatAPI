@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Entity;
 
+use App\Domain\Enum\GenderEnum;
 use App\Domain\ValueObject\Email;
 use App\Domain\ValueObject\EmailToken;
 use App\Domain\ValueObject\HashedPassword;
@@ -28,6 +29,8 @@ final class DomainUser
         private ?string $emailToken,
         private ?\DateTimeImmutable $emailTokenExpiresAt,
         private \DateTimeImmutable $registeredAt,
+        private GenderEnum $gender,
+        private \DateTimeImmutable $birthDate,
     ) {
     }
 
@@ -37,6 +40,8 @@ final class DomainUser
         Username $username,
         EmailToken $emailToken,
         TokenExpirationTime $emailTokenExpiresAt,
+        GenderEnum $gender,
+        \DateTimeImmutable $birthDate,
     ): self {
         return new self(
             id: null,
@@ -50,6 +55,8 @@ final class DomainUser
             emailToken: (string) $emailToken,
             emailTokenExpiresAt: $emailTokenExpiresAt->value(),
             registeredAt: new \DateTimeImmutable(),
+            gender: $gender,
+            birthDate: $birthDate,
         );
     }
 
@@ -91,15 +98,17 @@ final class DomainUser
         $this->passwordTokenExpiresAt = null;
     }
 
-    public function saveSettings(Username $username, Email $email): void
+    public function saveSettings(Username $username, Email $email,GenderEnum $gender, \DateTimeImmutable $birthDate): void
     {
         $this->username = (string) $username;
         $this->email = (string) $email;
+        $this->gender = $gender;
+        $this->birthDate = $birthDate;
     }
 
-    public function saveSettingsWithEmailUpdate(Username $username, Email $email, EmailToken $token, TokenExpirationTime $tokenExpiresAt): void
+    public function saveSettingsWithEmailUpdate(Username $username, Email $email, GenderEnum $gender, \DateTimeImmutable $birthDate, EmailToken $token, TokenExpirationTime $tokenExpiresAt): void
     {
-        $this->saveSettings($username, $email);
+        $this->saveSettings($username, $email, $gender, $birthDate);
         $this->emailToken = (string) $token;
         $this->emailTokenExpiresAt = $tokenExpiresAt->value();
     }
@@ -163,5 +172,15 @@ final class DomainUser
     public function getRegisteredAt(): \DateTimeImmutable
     {
         return $this->registeredAt;
+    }
+
+    public function getGender(): GenderEnum
+    {
+        return $this->gender;
+    }
+
+    public function getBirthDate(): \DateTimeImmutable
+    {
+        return $this->birthDate;
     }
 }

@@ -54,6 +54,8 @@ final readonly class RegisterHandler
             username: $username,
             emailToken: $emailToken,
             emailTokenExpiresAt: $emailTokenExpiresAt,
+            gender: $command->gender,
+            birthDate: $command->birthDate
         );
 
         $user = $this->domainUserRepository->createDomainUser($user);
@@ -67,7 +69,6 @@ final readonly class RegisterHandler
 
         return new RegisterResult(
             userId: $user->getId() ?? throw new \LogicException('Registered user must have id.'),
-            email: $user->getEmail(),
             message: 'User successfully registered, check your email for further instructions.',
         );
     }

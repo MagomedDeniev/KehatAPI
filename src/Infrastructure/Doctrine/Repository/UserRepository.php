@@ -142,6 +142,8 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             emailToken: $user->getEmailToken(),
             emailTokenExpiresAt: $user->getEmailTokenExpiresAt(),
             registeredAt: $user->getRegisteredAt(),
+            gender: $user->getGender(),
+            birthDate: $user->getBirthDate(),
         );
     }
 
@@ -157,5 +159,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $user->setEmailToken($domainUser->getEmailToken());
         $user->setEmailTokenExpiresAt($domainUser->getEmailTokenExpiresAt());
         $user->setRegisteredAt($domainUser->getRegisteredAt());
+        $user->setGender($domainUser->getGender());
+        $user->setBirthDate($domainUser->getBirthDate());
     }
 }

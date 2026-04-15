@@ -16,7 +16,12 @@ final class Email extends Compound
         return [
             new Assert\NotBlank(),
             new Assert\Email(),
-            new Assert\Length(min: UserRules::EMAIL_MIN, max: UserRules::EMAIL_MAX),
+            new Assert\Length(
+                min: UserRules::EMAIL_MIN,
+                max: UserRules::EMAIL_MAX,
+                minMessage: "Email should have {{ min }} characters or more.",
+                maxMessage: "Email should have {{ min }} characters or more.",
+            ),
         ];
     }
 }

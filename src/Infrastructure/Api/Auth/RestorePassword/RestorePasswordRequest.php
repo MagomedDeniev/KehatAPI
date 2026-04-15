@@ -13,7 +13,7 @@ final readonly class RestorePasswordRequest
         public string $token,
 
         #[Compound\Password]
-        public string $newPassword,
+        public string $password,
     ) {
     }
 }

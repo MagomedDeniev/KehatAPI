@@ -2,28 +2,24 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Api\Account\ShowMyProfile;
+namespace App\Infrastructure\Api\Users\ShowUserProfile;
 
 use App\Infrastructure\Doctrine\Entity\User;
 use App\Infrastructure\Service\JsonResponder;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
-#[Route('/api', name: 'api_profile_')]
-final class ShowMyProfileController extends AbstractController
+final class ShowUserProfileController extends AbstractController
 {
-    #[Route('/me', name: 'me', methods: ['GET'])]
-    public function me(#[CurrentUser] User $user, JsonResponder $responder): JsonResponse
+    #[Route('/api/users/profile/{username:user}', name: 'api_user_profile', methods: ['GET'])]
+    public function profile(User $user, JsonResponder $responder): JsonResponse
     {
         return $responder->success(
             data: [
                 'username' => $user->getUsername(),
-                'email' => $user->getEmail(),
-                'gender' => $user->getGender(),
-                'birthDate' => $user->getBirthDate()->format('Y-m-d'),
-                'roles' => $user->getRoles(),
                 'registeredAt' => $user->getRegisteredAt()->format('Y-m-d'),
             ]
         );

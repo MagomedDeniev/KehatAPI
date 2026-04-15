@@ -50,11 +50,11 @@ final readonly class ChangeMySettingsHandler
         // Логика email такая, что подтвержденной почта считается если email = confirmedEmail
         // При изменении email, email должен сразу меняться, тем самым давая понять что email != confirmedEmail
         if ((string) $email === $user->getConfirmedEmail()) {
-            $user->saveSettings($username, $email);
+            $user->saveSettings($username, $email, $command->gender, $command->birthDate);
         } else {
             $token = new EmailToken($this->tokenGenerator->generateToken());
             $tokenExpiresAt = new TokenExpirationTime();
-            $user->saveSettingsWithEmailUpdate($username, $email, $token, $tokenExpiresAt);
+            $user->saveSettingsWithEmailUpdate($username, $email, $command->gender, $command->birthDate, $token, $tokenExpiresAt);
 
             $this->mailerService->sendTemplate(
                 to: $user->getEmail(),

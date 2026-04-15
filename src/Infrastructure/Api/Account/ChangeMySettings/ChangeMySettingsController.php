@@ -6,6 +6,7 @@ namespace App\Infrastructure\Api\Account\ChangeMySettings;
 
 use App\Application\Account\ChangeMySettings\ChangeMySettingsCommand;
 use App\Application\Account\ChangeMySettings\ChangeMySettingsHandler;
+use App\Domain\Enum\GenderEnum;
 use App\Infrastructure\Doctrine\Entity\User;
 use App\Infrastructure\Service\JsonResponder;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -30,6 +31,8 @@ final class ChangeMySettingsController extends AbstractController
         $result = $handler(new ChangeMySettingsCommand(
             userId: $user->getId(),
             username: $changeMeRequest->username,
+            gender: GenderEnum::from( $changeMeRequest->gender),
+            birthDate: \DateTimeImmutable::createFromFormat('Y-m-d', $changeMeRequest->birthDate),
             email: $changeMeRequest->email,
         ));
 

@@ -18,7 +18,7 @@ final class Username extends Compound
             new Assert\Length(min: UserRules::USERNAME_MIN, max: UserRules::USERNAME_MAX),
             new Assert\Regex(
                 pattern: UserRules::USERNAME_PATTERN,
-                message: 'username.can.consist.symbols'
+                message: 'The username can only contain letters, numbers, symbols . and _'
             ),
         ];
     }
