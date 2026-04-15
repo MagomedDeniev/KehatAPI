@@ -18,8 +18,8 @@ final class Password extends Compound
             new Assert\Length(
                 min: UserRules::PASSWORD_MIN,
                 max: UserRules::PASSWORD_MAX,
-                minMessage: "Password should have {{ min }} characters or more.",
-                maxMessage: "Password should have {{ min }} characters or more.",
+                minMessage: 'Password should have {{ min }} characters or more.',
+                maxMessage: 'Password should have {{ min }} characters or more.',
             ),
         ];
     }

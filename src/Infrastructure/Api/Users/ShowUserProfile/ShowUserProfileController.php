@@ -6,11 +6,9 @@ namespace App\Infrastructure\Api\Users\ShowUserProfile;
 
 use App\Infrastructure\Doctrine\Entity\User;
 use App\Infrastructure\Service\JsonResponder;
-use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\CurrentUser;
 
 final class ShowUserProfileController extends AbstractController
 {

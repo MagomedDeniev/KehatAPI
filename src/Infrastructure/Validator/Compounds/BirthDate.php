@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Validator\Compounds;
 
-use App\Domain\Enum\GenderEnum;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Constraints\Compound;
 
@@ -15,7 +14,7 @@ final class BirthDate extends Compound
     {
         return [
             new Assert\NotBlank(message: 'The birth date cannot be empty.'),
-            new Assert\Date()
+            new Assert\Date(),
         ];
     }
 }

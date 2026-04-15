@@ -7,7 +7,7 @@ namespace App\Application\Auth\CheckToken;
 final readonly class CheckTokenResult
 {
     public function __construct(
-        public string $message
+        public string $message,
     ) {
     }
 }

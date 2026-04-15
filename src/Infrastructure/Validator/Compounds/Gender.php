@@ -17,7 +17,7 @@ final class Gender extends Compound
             new Assert\Choice(
                 choices: ['male', 'female'],
                 message: 'The selected gender is invalid.',
-            )
+            ),
         ];
     }
 }

@@ -26,7 +26,7 @@ class RegisterController extends AbstractController
     {
         $result = $handler(new RegisterCommand(
             username: $registerRequest->username,
-            gender: GenderEnum::from( $registerRequest->gender),
+            gender: GenderEnum::from($registerRequest->gender),
             birthDate: \DateTimeImmutable::createFromFormat('Y-m-d', $registerRequest->birthDate),
             email: $registerRequest->email,
             password: $registerRequest->password,

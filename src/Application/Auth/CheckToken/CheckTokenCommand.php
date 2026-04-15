@@ -8,7 +8,7 @@ final readonly class CheckTokenCommand
 {
     public function __construct(
         public string $token,
-        public string $type
+        public string $type,
     ) {
     }
 }

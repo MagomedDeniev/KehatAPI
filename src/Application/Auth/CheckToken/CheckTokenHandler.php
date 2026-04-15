@@ -16,9 +16,9 @@ final readonly class CheckTokenHandler
 
     public function __invoke(CheckTokenCommand $command): CheckTokenResult
     {
-        if ($command->type === "password") {
+        if ('password' === $command->type) {
             $user = $this->domainUserRepository->findUserByPasswordToken($command->token);
-        } elseif ($command->type === "email") {
+        } elseif ('email' === $command->type) {
             $user = $this->domainUserRepository->findUserByEmailToken($command->token);
         } else {
             $user = null;
@@ -28,11 +28,11 @@ final readonly class CheckTokenHandler
             throw new \DomainException('Token is invalid.');
         }
 
-        if ($command->type === "password") {
+        if ('password' === $command->type) {
             if (!$user->hasValidPasswordToken()) {
                 throw new \DomainException('Password reset token is invalid or expired.');
             }
-        } elseif ($command->type === "email") {
+        } elseif ('email' === $command->type) {
             if (!$user->hasValidEmailToken()) {
                 throw new \DomainException('Email reset token is invalid or expired.');
             }

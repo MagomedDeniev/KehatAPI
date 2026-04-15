@@ -98,7 +98,7 @@ final class DomainUser
         $this->passwordTokenExpiresAt = null;
     }
 
-    public function saveSettings(Username $username, Email $email,GenderEnum $gender, \DateTimeImmutable $birthDate): void
+    public function saveSettings(Username $username, Email $email, GenderEnum $gender, \DateTimeImmutable $birthDate): void
     {
         $this->username = (string) $username;
         $this->email = (string) $email;
