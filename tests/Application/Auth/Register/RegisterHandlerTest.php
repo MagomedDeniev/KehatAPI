@@ -8,6 +8,7 @@ use App\Application\Auth\Register\RegisterCommand;
 use App\Application\Auth\Register\RegisterHandler;
 use App\Application\Contract\PasswordHasherInterface;
 use App\Domain\Entity\DomainUser;
+use App\Domain\Enum\GenderEnum;
 use App\Domain\Repository\DomainUserRepositoryInterface;
 use App\Infrastructure\Service\MailerService;
 use App\Tests\Support\UserFactory;
@@ -19,6 +20,8 @@ use Symfony\Component\Security\Csrf\TokenGenerator\TokenGeneratorInterface;
 
 final class RegisterHandlerTest extends TestCase
 {
+    private const BIRTH_DATE = '1990-05-20';
+
     public function testItRegistersNewUserAndSendsConfirmationEmail(): void
     {
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
@@ -58,6 +61,8 @@ final class RegisterHandlerTest extends TestCase
                 self::assertSame(UserFactory::VALID_PASSWORD_HASH, $user->getPassword());
                 self::assertSame(UserFactory::VALID_EMAIL_TOKEN, $user->getEmailToken());
                 self::assertNull($user->getConfirmedEmail());
+                self::assertSame(GenderEnum::FEMALE, $user->getGender());
+                self::assertSame(self::BIRTH_DATE, $user->getBirthDate()->format('Y-m-d'));
                 self::assertGreaterThan(time(), $user->getEmailTokenExpiresAt()?->getTimestamp() ?? 0);
 
                 return UserFactory::domainUser(
@@ -72,6 +77,8 @@ final class RegisterHandlerTest extends TestCase
                     emailToken: $user->getEmailToken(),
                     emailTokenExpiresAt: $user->getEmailTokenExpiresAt(),
                     registeredAt: $user->getRegisteredAt(),
+                    gender: $user->getGender(),
+                    birthDate: $user->getBirthDate(),
                 );
             });
 
@@ -91,10 +98,15 @@ final class RegisterHandlerTest extends TestCase
 
         $logger->expects($this->never())->method('error');
 
-        $result = $handler(new RegisterCommand('  Test.User@example.com ', ' Test_User ', '12345678'));
+        $result = $handler(new RegisterCommand(
+            username: ' Test_User ',
+            gender: GenderEnum::FEMALE,
+            birthDate: new \DateTimeImmutable(self::BIRTH_DATE),
+            email: '  Test.User@example.com ',
+            password: '12345678',
+        ));
 
         self::assertSame(42, $result->userId);
-        self::assertSame('test.user@example.com', $result->email);
         self::assertSame('User successfully registered, check your email for further instructions.', $result->message);
     }
 
@@ -126,7 +138,13 @@ final class RegisterHandlerTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('There is already an account with this email.');
 
-        $handler(new RegisterCommand('user@example.com', 'username', '12345678'));
+        $handler(new RegisterCommand(
+            username: 'username',
+            gender: GenderEnum::MALE,
+            birthDate: new \DateTimeImmutable(self::BIRTH_DATE),
+            email: 'user@example.com',
+            password: '12345678',
+        ));
     }
 
     public function testItRejectsExistingUsername(): void
@@ -154,7 +172,13 @@ final class RegisterHandlerTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('There is already an account with this username.');
 
-        $handler(new RegisterCommand('user@example.com', 'username', '12345678'));
+        $handler(new RegisterCommand(
+            username: 'username',
+            gender: GenderEnum::MALE,
+            birthDate: new \DateTimeImmutable(self::BIRTH_DATE),
+            email: 'user@example.com',
+            password: '12345678',
+        ));
     }
 
     public function testItRejectsInvalidEmailBeforeRepositoryLookup(): void
@@ -174,7 +198,13 @@ final class RegisterHandlerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Email is not valid.');
 
-        $handler(new RegisterCommand('bad-email', 'username', '12345678'));
+        $handler(new RegisterCommand(
+            username: 'username',
+            gender: GenderEnum::MALE,
+            birthDate: new \DateTimeImmutable(self::BIRTH_DATE),
+            email: 'bad-email',
+            password: '12345678',
+        ));
     }
 
     public function testItRejectsInvalidPasswordAfterUniquenessChecks(): void
@@ -201,7 +231,13 @@ final class RegisterHandlerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Password length must be between 8 and 4096 characters.');
 
-        $handler(new RegisterCommand('user@example.com', 'username', 'short'));
+        $handler(new RegisterCommand(
+            username: 'username',
+            gender: GenderEnum::MALE,
+            birthDate: new \DateTimeImmutable(self::BIRTH_DATE),
+            email: 'user@example.com',
+            password: 'short',
+        ));
     }
 
     public function testItThrowsWhenPersistedUserHasNoId(): void
@@ -233,6 +269,12 @@ final class RegisterHandlerTest extends TestCase
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('Registered user must have id.');
 
-        $handler(new RegisterCommand('user@example.com', 'username', '12345678'));
+        $handler(new RegisterCommand(
+            username: 'username',
+            gender: GenderEnum::MALE,
+            birthDate: new \DateTimeImmutable(self::BIRTH_DATE),
+            email: 'user@example.com',
+            password: '12345678',
+        ));
     }
 }

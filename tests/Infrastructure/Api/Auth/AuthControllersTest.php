@@ -19,12 +19,17 @@ use App\Infrastructure\Api\Auth\Register\RegisterController;
 use App\Infrastructure\Api\Auth\Register\RegisterRequest;
 use App\Infrastructure\Api\Auth\RestorePassword\RestorePasswordController;
 use App\Infrastructure\Api\Auth\RestorePassword\RestorePasswordRequest;
+use App\Infrastructure\Doctrine\Repository\UserRepository;
 use App\Infrastructure\Service\JsonResponder;
 use App\Infrastructure\Service\MailerService;
 use App\Tests\Support\UserFactory;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\Storage\InMemoryStorage;
 use Symfony\Component\Security\Csrf\TokenGenerator\TokenGeneratorInterface;
 
 final class AuthControllersTest extends TestCase
@@ -35,6 +40,9 @@ final class AuthControllersTest extends TestCase
         $passwordHasher = $this->createMock(PasswordHasherInterface::class);
         $tokenGenerator = $this->createMock(TokenGeneratorInterface::class);
         $mailer = $this->createMock(MailerInterface::class);
+        $userRepository = $this->createMock(UserRepository::class);
+        $jwtManager = $this->createMock(JWTTokenManagerInterface::class);
+        $ormUser = UserFactory::ormUser(id: 12, email: 'user@example.com', username: 'username');
 
         $repository->expects($this->once())->method('findUserByEmail')->with('user@example.com')->willReturn(null);
         $repository->expects($this->once())->method('findUserByUsername')->with('username')->willReturn(null);
@@ -50,9 +58,11 @@ final class AuthControllersTest extends TestCase
             emailTokenExpiresAt: new \DateTimeImmutable('+1 hour'),
         ));
         $mailer->expects($this->once())->method('send');
+        $userRepository->expects($this->once())->method('findOneBy')->with(['id' => 12])->willReturn($ormUser);
+        $jwtManager->expects($this->once())->method('create')->with($ormUser)->willReturn('jwt-token');
 
         $response = (new RegisterController())->register(
-            new RegisterRequest('username', 'user@example.com', '12345678'),
+            new RegisterRequest('username', 'male', '1990-05-20', 'user@example.com', '12345678'),
             new RegisterHandler(
                 $repository,
                 $passwordHasher,
@@ -60,14 +70,15 @@ final class AuthControllersTest extends TestCase
                 new MailerService($mailer, $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
             ),
             new JsonResponder(),
+            $userRepository,
+            $jwtManager,
         );
 
         self::assertSame(201, $response->getStatusCode());
         self::assertSame([
             'success' => true,
             'data' => [
-                'userId' => 12,
-                'email' => 'user@example.com',
+                'token' => 'jwt-token',
             ],
             'message' => 'User successfully registered, check your email for further instructions.',
         ], $this->decodeResponse($response->getContent()));
@@ -78,12 +89,17 @@ final class AuthControllersTest extends TestCase
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
         $tokenGenerator = $this->createMock(TokenGeneratorInterface::class);
         $mailer = $this->createMock(MailerInterface::class);
+        $request = Request::create('/api/forgot/password', 'POST', server: ['REMOTE_ADDR' => '127.0.0.1']);
 
         $repository->expects($this->once())->method('findUserByEmail')->with('user@example.com')->willReturn(null);
         $tokenGenerator->expects($this->never())->method('generateToken');
         $mailer->expects($this->never())->method('send');
 
-        $response = (new ForgotPasswordController())->forgotPassword(
+        $response = (new ForgotPasswordController(
+            $this->createNoLimitFactory('forgot-password-ip'),
+            $this->createNoLimitFactory('forgot-password-email'),
+        ))->forgotPassword(
+            $request,
             new ForgotPasswordRequest('user@example.com'),
             new ForgotPasswordHandler(
                 $repository,
@@ -168,5 +184,13 @@ final class AuthControllersTest extends TestCase
         self::assertIsArray($decoded);
 
         return $decoded;
+    }
+
+    private function createNoLimitFactory(string $id): RateLimiterFactory
+    {
+        return new RateLimiterFactory(
+            ['id' => $id, 'policy' => 'no_limit'],
+            new InMemoryStorage(),
+        );
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Domain\Entity;
 
 use App\Domain\Entity\DomainUser;
+use App\Domain\Enum\GenderEnum;
 use App\Domain\ValueObject\Email;
 use App\Domain\ValueObject\EmailToken;
 use App\Domain\ValueObject\HashedPassword;
@@ -19,6 +20,7 @@ final class DomainUserTest extends TestCase
     public function testRegisterCreatesDefaultState(): void
     {
         $emailTokenExpiresAt = new TokenExpirationTime();
+        $birthDate = new \DateTimeImmutable('1990-05-20');
 
         $user = DomainUser::register(
             email: new Email('user@example.com'),
@@ -26,6 +28,8 @@ final class DomainUserTest extends TestCase
             username: new Username('username'),
             emailToken: new EmailToken(UserFactory::VALID_EMAIL_TOKEN),
             emailTokenExpiresAt: $emailTokenExpiresAt,
+            gender: GenderEnum::FEMALE,
+            birthDate: $birthDate,
         );
 
         self::assertNull($user->getId());
@@ -38,6 +42,8 @@ final class DomainUserTest extends TestCase
         self::assertNull($user->getPasswordTokenExpiresAt());
         self::assertSame(UserFactory::VALID_EMAIL_TOKEN, $user->getEmailToken());
         self::assertSame($emailTokenExpiresAt->value(), $user->getEmailTokenExpiresAt());
+        self::assertSame(GenderEnum::FEMALE, $user->getGender());
+        self::assertSame($birthDate, $user->getBirthDate());
         self::assertLessThanOrEqual(2, abs($user->getRegisteredAt()->getTimestamp() - time()));
     }
 
@@ -100,30 +106,38 @@ final class DomainUserTest extends TestCase
         self::assertNull($user->getPasswordTokenExpiresAt());
     }
 
-    public function testSaveSettingsUpdatesUsernameAndEmail(): void
+    public function testSaveSettingsUpdatesProfileFields(): void
     {
         $user = UserFactory::domainUser(email: 'old@example.com', username: 'old_name');
+        $birthDate = new \DateTimeImmutable('1993-07-15');
 
-        $user->saveSettings(new Username('new_name'), new Email('new@example.com'));
+        $user->saveSettings(new Username('new_name'), new Email('new@example.com'), GenderEnum::FEMALE, $birthDate);
 
         self::assertSame('new_name', $user->getUsername());
         self::assertSame('new@example.com', $user->getEmail());
+        self::assertSame(GenderEnum::FEMALE, $user->getGender());
+        self::assertSame($birthDate, $user->getBirthDate());
     }
 
     public function testSaveSettingsWithEmailUpdateAlsoStoresNewEmailToken(): void
     {
         $user = UserFactory::domainUser(email: 'old@example.com', username: 'old_name');
         $expiresAt = new TokenExpirationTime();
+        $birthDate = new \DateTimeImmutable('1994-08-11');
 
         $user->saveSettingsWithEmailUpdate(
             new Username('new_name'),
             new Email('new@example.com'),
+            GenderEnum::FEMALE,
+            $birthDate,
             new EmailToken(UserFactory::VALID_EMAIL_TOKEN_ALT),
             $expiresAt,
         );
 
         self::assertSame('new_name', $user->getUsername());
         self::assertSame('new@example.com', $user->getEmail());
+        self::assertSame(GenderEnum::FEMALE, $user->getGender());
+        self::assertSame($birthDate, $user->getBirthDate());
         self::assertSame(UserFactory::VALID_EMAIL_TOKEN_ALT, $user->getEmailToken());
         self::assertSame($expiresAt->value(), $user->getEmailTokenExpiresAt());
     }

@@ -56,7 +56,7 @@ final class UniqueUserCredentialsValidatorTest extends ConstraintValidatorTestCa
 
     public function testItBuildsViolationsForRegisterRequestDuplicates(): void
     {
-        $request = new RegisterRequest(' User_Name ', ' User@example.com ', '12345678');
+        $request = new RegisterRequest(' User_Name ', 'male', '1990-05-20', ' User@example.com ', '12345678');
 
         $this->repository
             ->expects($this->exactly(2))
@@ -82,7 +82,7 @@ final class UniqueUserCredentialsValidatorTest extends ConstraintValidatorTestCa
 
     public function testItAllowsUniqueRegisterCredentials(): void
     {
-        $request = new RegisterRequest('username', 'user@example.com', '12345678');
+        $request = new RegisterRequest('username', 'male', '1990-05-20', 'user@example.com', '12345678');
 
         $this->repository->expects($this->exactly(2))->method('findOneBy')->willReturn(null);
 
@@ -93,7 +93,7 @@ final class UniqueUserCredentialsValidatorTest extends ConstraintValidatorTestCa
 
     public function testItIgnoresChangeMySettingsWhenCurrentUserIsMissing(): void
     {
-        $request = new ChangeMySettingsRequest('username', 'user@example.com');
+        $request = new ChangeMySettingsRequest('username', 'male', '1990-05-20', 'user@example.com');
 
         $this->security->expects($this->once())->method('getUser')->willReturn(null);
         $this->repository->expects($this->never())->method('findOneBy');
@@ -105,7 +105,7 @@ final class UniqueUserCredentialsValidatorTest extends ConstraintValidatorTestCa
 
     public function testItBuildsViolationsWhenChangeMySettingsCredentialsBelongToAnotherUser(): void
     {
-        $request = new ChangeMySettingsRequest('new_user', 'new@example.com');
+        $request = new ChangeMySettingsRequest('new_user', 'male', '1990-05-20', 'new@example.com');
 
         $this->security->expects($this->once())->method('getUser')->willReturn(UserFactory::ormUser(id: 10, email: 'current@example.com', username: 'current_user'));
         $this->repository
@@ -132,7 +132,7 @@ final class UniqueUserCredentialsValidatorTest extends ConstraintValidatorTestCa
 
     public function testItAllowsChangeMySettingsToReuseOwnCredentials(): void
     {
-        $request = new ChangeMySettingsRequest('current_user', 'current@example.com');
+        $request = new ChangeMySettingsRequest('current_user', 'male', '1990-05-20', 'current@example.com');
 
         $this->security->expects($this->once())->method('getUser')->willReturn(UserFactory::ormUser(id: 10, email: 'current@example.com', username: 'current_user'));
         $this->repository

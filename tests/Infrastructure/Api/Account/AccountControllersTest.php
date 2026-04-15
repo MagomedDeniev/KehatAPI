@@ -15,8 +15,10 @@ use App\Infrastructure\Api\Account\ChangeMySettings\ChangeMySettingsController;
 use App\Infrastructure\Api\Account\ChangeMySettings\ChangeMySettingsRequest;
 use App\Infrastructure\Api\Account\ShowMyProfile\ShowMyProfileController;
 use App\Infrastructure\Service\JsonResponder;
+use App\Domain\Enum\GenderEnum;
 use App\Infrastructure\Service\MailerService;
 use App\Tests\Support\UserFactory;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
@@ -30,6 +32,7 @@ final class AccountControllersTest extends TestCase
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
         $tokenGenerator = $this->createMock(TokenGeneratorInterface::class);
         $mailer = $this->createMock(MailerInterface::class);
+        $jwtManager = $this->createMock(JWTTokenManagerInterface::class);
         $currentDomainUser = UserFactory::domainUser(id: 5, email: 'user@example.com', confirmedEmail: 'user@example.com', username: 'old_name');
 
         $repository->expects($this->once())->method('findUserById')->with(5)->willReturn($currentDomainUser);
@@ -38,23 +41,25 @@ final class AccountControllersTest extends TestCase
 
         $tokenGenerator->expects($this->never())->method('generateToken');
         $mailer->expects($this->never())->method('send');
+        $jwtManager->expects($this->never())->method('create');
         $repository->expects($this->once())->method('updateDomainUser')->with($this->isInstanceOf(DomainUser::class))->willReturnCallback(static fn (DomainUser $user): DomainUser => $user);
 
         $response = (new ChangeMySettingsController())->changeMySettings(
             UserFactory::ormUser(id: 5, email: 'user@example.com', username: 'old_name'),
-            new ChangeMySettingsRequest('new_name', 'user@example.com'),
+            new ChangeMySettingsRequest('new_name', 'female', '1990-05-20', 'user@example.com'),
             new ChangeMySettingsHandler(
                 $repository,
                 $tokenGenerator,
                 new MailerService($mailer, $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
             ),
             new JsonResponder(),
+            $jwtManager,
         );
 
         self::assertSame(200, $response->getStatusCode());
         self::assertSame([
             'success' => true,
-            'data' => [],
+            'data' => ['token' => null],
             'message' => 'Your settings updated successfully.',
         ], $this->decodeResponse($response->getContent()));
     }
@@ -68,13 +73,14 @@ final class AccountControllersTest extends TestCase
 
         $controller->changeMySettings(
             UserFactory::ormUser(id: null),
-            new ChangeMySettingsRequest('username', 'user@example.com'),
+            new ChangeMySettingsRequest('username', 'male', '1990-05-20', 'user@example.com'),
             new ChangeMySettingsHandler(
                 $this->createMock(DomainUserRepositoryInterface::class),
                 $this->createMock(TokenGeneratorInterface::class),
                 new MailerService($this->createMock(MailerInterface::class), $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
             ),
             new JsonResponder(),
+            $this->createMock(JWTTokenManagerInterface::class),
         );
     }
 
@@ -132,6 +138,8 @@ final class AccountControllersTest extends TestCase
                 email: 'user@example.com',
                 username: 'username',
                 roles: ['ROLE_ADMIN'],
+                gender: GenderEnum::FEMALE,
+                birthDate: new \DateTimeImmutable('1990-05-20'),
                 registeredAt: new \DateTimeImmutable('2024-01-02T03:04:05+00:00'),
             ),
             new JsonResponder(),
@@ -141,11 +149,12 @@ final class AccountControllersTest extends TestCase
         self::assertSame([
             'success' => true,
             'data' => [
-                'id' => 5,
-                'email' => 'user@example.com',
                 'username' => 'username',
+                'email' => 'user@example.com',
+                'gender' => 'female',
+                'birthDate' => '1990-05-20',
                 'roles' => ['ROLE_ADMIN', 'ROLE_USER'],
-                'registeredAt' => '2024-01-02T03:04:05+00:00',
+                'registeredAt' => '2024-01-02',
             ],
         ], $this->decodeResponse($response->getContent()));
     }

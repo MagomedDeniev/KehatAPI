@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Support;
 
 use App\Domain\Entity\DomainUser;
+use App\Domain\Enum\GenderEnum;
 use App\Infrastructure\Doctrine\Entity\User;
 
 final class UserFactory
@@ -31,6 +32,8 @@ final class UserFactory
         ?string $emailToken = null,
         ?\DateTimeImmutable $emailTokenExpiresAt = null,
         ?\DateTimeImmutable $registeredAt = null,
+        GenderEnum $gender = GenderEnum::MALE,
+        ?\DateTimeImmutable $birthDate = null,
     ): DomainUser {
         return new DomainUser(
             id: $id,
@@ -44,6 +47,8 @@ final class UserFactory
             emailToken: $emailToken,
             emailTokenExpiresAt: $emailTokenExpiresAt,
             registeredAt: $registeredAt ?? new \DateTimeImmutable('-1 day'),
+            gender: $gender,
+            birthDate: $birthDate ?? new \DateTimeImmutable('2000-01-01'),
         );
     }
 
@@ -62,6 +67,8 @@ final class UserFactory
         ?string $emailToken = null,
         ?\DateTimeImmutable $emailTokenExpiresAt = null,
         ?\DateTimeImmutable $registeredAt = null,
+        GenderEnum $gender = GenderEnum::MALE,
+        ?\DateTimeImmutable $birthDate = null,
     ): User {
         $user = (new User())
             ->setEmail($email)
@@ -73,7 +80,9 @@ final class UserFactory
             ->setPasswordTokenExpiresAt($passwordTokenExpiresAt)
             ->setEmailToken($emailToken)
             ->setEmailTokenExpiresAt($emailTokenExpiresAt)
-            ->setRegisteredAt($registeredAt ?? new \DateTimeImmutable('-1 day'));
+            ->setRegisteredAt($registeredAt ?? new \DateTimeImmutable('-1 day'))
+            ->setGender($gender)
+            ->setBirthDate($birthDate ?? new \DateTimeImmutable('2000-01-01'));
 
         self::forceId($user, $id);
 

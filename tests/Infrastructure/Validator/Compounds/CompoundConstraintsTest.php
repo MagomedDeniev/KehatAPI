@@ -62,7 +62,7 @@ final class CompoundConstraintsTest extends TestCase
         self::assertSame(UserRules::USERNAME_MAX, $constraints[1]->max);
         self::assertInstanceOf(Regex::class, $constraints[2]);
         self::assertSame(UserRules::USERNAME_PATTERN, $constraints[2]->pattern);
-        self::assertSame('form.username.can.consist.symbols', $constraints[2]->message);
+        self::assertSame('The username can only contain letters, numbers, symbols . and _', $constraints[2]->message);
     }
 
     public function testPasswordCompoundContainsExpectedConstraints(): void

@@ -7,6 +7,7 @@ namespace App\Tests\Application\Account\ChangeMySettings;
 use App\Application\Account\ChangeMySettings\ChangeMySettingsCommand;
 use App\Application\Account\ChangeMySettings\ChangeMySettingsHandler;
 use App\Domain\Entity\DomainUser;
+use App\Domain\Enum\GenderEnum;
 use App\Domain\Repository\DomainUserRepositoryInterface;
 use App\Infrastructure\Service\MailerService;
 use App\Tests\Support\UserFactory;
@@ -18,6 +19,8 @@ use Symfony\Component\Security\Csrf\TokenGenerator\TokenGeneratorInterface;
 
 final class ChangeMySettingsHandlerTest extends TestCase
 {
+    private const BIRTH_DATE = '1990-05-20';
+
     public function testItRejectsMissingUser(): void
     {
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
@@ -33,7 +36,7 @@ final class ChangeMySettingsHandlerTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('User not found.');
 
-        $handler(new ChangeMySettingsCommand(99, 'username', 'user@example.com'));
+        $handler(new ChangeMySettingsCommand(99, 'username', GenderEnum::MALE, new \DateTimeImmutable(self::BIRTH_DATE), 'user@example.com'));
     }
 
     public function testItRejectsDuplicateEmailOwnedByAnotherUser(): void
@@ -57,7 +60,7 @@ final class ChangeMySettingsHandlerTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('There is already an account with this email.');
 
-        $handler(new ChangeMySettingsCommand(10, 'username', 'new@example.com'));
+        $handler(new ChangeMySettingsCommand(10, 'username', GenderEnum::MALE, new \DateTimeImmutable(self::BIRTH_DATE), 'new@example.com'));
     }
 
     public function testItRejectsDuplicateUsernameOwnedByAnotherUser(): void
@@ -80,7 +83,7 @@ final class ChangeMySettingsHandlerTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('There is already an account with this username.');
 
-        $handler(new ChangeMySettingsCommand(10, 'new_name', 'user@example.com'));
+        $handler(new ChangeMySettingsCommand(10, 'new_name', GenderEnum::MALE, new \DateTimeImmutable(self::BIRTH_DATE), 'user@example.com'));
     }
 
     public function testItAllowsSameCredentialsForCurrentUserWithoutSendingEmail(): void
@@ -109,15 +112,18 @@ final class ChangeMySettingsHandlerTest extends TestCase
             ->with($this->callback(static function (DomainUser $updatedUser): bool {
                 self::assertSame('new_name', $updatedUser->getUsername());
                 self::assertSame('user@example.com', $updatedUser->getEmail());
+                self::assertSame(GenderEnum::FEMALE, $updatedUser->getGender());
+                self::assertSame(self::BIRTH_DATE, $updatedUser->getBirthDate()->format('Y-m-d'));
                 self::assertNull($updatedUser->getEmailToken());
 
                 return true;
             }))
             ->willReturnCallback(static fn (DomainUser $updatedUser): DomainUser => $updatedUser);
 
-        $result = $handler(new ChangeMySettingsCommand(10, 'new_name', 'user@example.com'));
+        $result = $handler(new ChangeMySettingsCommand(10, 'new_name', GenderEnum::FEMALE, new \DateTimeImmutable(self::BIRTH_DATE), 'user@example.com'));
 
         self::assertSame('Your settings updated successfully.', $result->message);
+        self::assertFalse($result->emailUpdated);
     }
 
     public function testItUpdatesEmailAndSendsNewConfirmation(): void
@@ -165,6 +171,8 @@ final class ChangeMySettingsHandlerTest extends TestCase
                 self::assertSame('new_name', $updatedUser->getUsername());
                 self::assertSame('new@example.com', $updatedUser->getEmail());
                 self::assertSame('old@example.com', $updatedUser->getConfirmedEmail());
+                self::assertSame(GenderEnum::FEMALE, $updatedUser->getGender());
+                self::assertSame(self::BIRTH_DATE, $updatedUser->getBirthDate()->format('Y-m-d'));
                 self::assertSame(UserFactory::VALID_EMAIL_TOKEN, $updatedUser->getEmailToken());
                 self::assertGreaterThan(time(), $updatedUser->getEmailTokenExpiresAt()?->getTimestamp() ?? 0);
 
@@ -172,9 +180,10 @@ final class ChangeMySettingsHandlerTest extends TestCase
             }))
             ->willReturnCallback(static fn (DomainUser $updatedUser): DomainUser => $updatedUser);
 
-        $result = $handler(new ChangeMySettingsCommand(10, 'new_name', 'new@example.com'));
+        $result = $handler(new ChangeMySettingsCommand(10, 'new_name', GenderEnum::FEMALE, new \DateTimeImmutable(self::BIRTH_DATE), 'new@example.com'));
 
         self::assertSame('Your settings updated successfully.', $result->message);
+        self::assertTrue($result->emailUpdated);
     }
 
     public function testItRejectsInvalidEmailBeforeRepositoryLookup(): void
@@ -194,6 +203,6 @@ final class ChangeMySettingsHandlerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Email is not valid.');
 
-        $handler(new ChangeMySettingsCommand(10, 'username', 'bad-email'));
+        $handler(new ChangeMySettingsCommand(10, 'username', GenderEnum::MALE, new \DateTimeImmutable(self::BIRTH_DATE), 'bad-email'));
     }
 }
