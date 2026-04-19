@@ -17,10 +17,10 @@ security:
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
         login:
-            pattern: ^/api/login_check$
+            pattern: ^/api/auth/login$
             stateless: true
             json_login:
-                check_path: /api/login_check
+                check_path: /api/auth/login
                 username_path: email
                 password_path: password
                 success_handler: lexik_jwt_authentication.handler.authentication_success
@@ -51,13 +51,13 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        - { path: ^/api/login_check$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/register$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/forgot/password$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/restore/password$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/confirm/email$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/users/profile/[^/]+$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/login$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/register$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/password/forgot$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/password/restore$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/email/confirm$, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth/check/token$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/users/[^/]+$, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: ROLE_USER }
 
 when@test:

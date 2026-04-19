@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Validator\Constraints;
 
-use App\Infrastructure\Api\Account\ChangeMySettings\ChangeMySettingsRequest;
+use App\Infrastructure\Api\Account\SettingsChange\SettingsChangeRequest;
 use App\Infrastructure\Api\Auth\Register\RegisterRequest;
 use App\Infrastructure\Doctrine\Entity\User;
 use App\Infrastructure\Doctrine\Repository\UserRepository;
@@ -28,14 +28,14 @@ final class UniqueUserCredentialsValidator extends ConstraintValidator
         }
 
         if (!$value instanceof RegisterRequest
-            && !$value instanceof ChangeMySettingsRequest) {
+            && !$value instanceof SettingsChangeRequest) {
             return;
         }
 
         $email = mb_strtolower(trim($value->email));
         $username = trim($value->username);
 
-        if ($value instanceof ChangeMySettingsRequest) {
+        if ($value instanceof SettingsChangeRequest) {
             $currentUser = $this->security->getUser();
 
             if (!$currentUser instanceof User || null === $currentUser->getId()) {

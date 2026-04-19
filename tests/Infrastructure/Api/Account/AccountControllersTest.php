@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\Tests\Infrastructure\Api\Account;
 
-use App\Application\Account\ChangeMyPassword\ChangeMyPasswordHandler;
-use App\Application\Account\ChangeMySettings\ChangeMySettingsHandler;
+use App\Application\Account\PasswordChange\PasswordChangeHandler;
+use App\Application\Account\SettingsChange\SettingsChangeHandler;
 use App\Application\Contract\PasswordHasherInterface;
 use App\Domain\Entity\DomainUser;
 use App\Domain\Repository\DomainUserRepositoryInterface;
-use App\Infrastructure\Api\Account\ChangeMyPassword\ChangeMyPasswordController;
-use App\Infrastructure\Api\Account\ChangeMyPassword\ChangeMyPasswordRequest;
-use App\Infrastructure\Api\Account\ChangeMySettings\ChangeMySettingsController;
-use App\Infrastructure\Api\Account\ChangeMySettings\ChangeMySettingsRequest;
-use App\Infrastructure\Api\Account\ShowMyProfile\ShowMyProfileController;
+use App\Infrastructure\Api\Account\PasswordChange\PasswordChangeController;
+use App\Infrastructure\Api\Account\PasswordChange\PasswordChangeRequest;
+use App\Infrastructure\Api\Account\SettingsChange\SettingsChangeController;
+use App\Infrastructure\Api\Account\SettingsChange\SettingsChangeRequest;
+use App\Infrastructure\Api\Account\CurrentUser\CurrentUserController;
 use App\Infrastructure\Service\JsonResponder;
 use App\Domain\Enum\GenderEnum;
 use App\Infrastructure\Service\MailerService;
@@ -44,10 +44,10 @@ final class AccountControllersTest extends TestCase
         $jwtManager->expects($this->never())->method('create');
         $repository->expects($this->once())->method('updateDomainUser')->with($this->isInstanceOf(DomainUser::class))->willReturnCallback(static fn (DomainUser $user): DomainUser => $user);
 
-        $response = (new ChangeMySettingsController())->changeMySettings(
+        $response = (new SettingsChangeController())->changeMySettings(
             UserFactory::ormUser(id: 5, email: 'user@example.com', username: 'old_name'),
-            new ChangeMySettingsRequest('new_name', 'female', '1990-05-20', 'user@example.com'),
-            new ChangeMySettingsHandler(
+            new SettingsChangeRequest('new_name', 'female', '1990-05-20', 'user@example.com'),
+            new SettingsChangeHandler(
                 $repository,
                 $tokenGenerator,
                 new MailerService($mailer, $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
@@ -66,15 +66,15 @@ final class AccountControllersTest extends TestCase
 
     public function testChangeMySettingsControllerRejectsUserWithoutId(): void
     {
-        $controller = new ChangeMySettingsController();
+        $controller = new SettingsChangeController();
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('User not have id.');
 
         $controller->changeMySettings(
             UserFactory::ormUser(id: null),
-            new ChangeMySettingsRequest('username', 'male', '1990-05-20', 'user@example.com'),
-            new ChangeMySettingsHandler(
+            new SettingsChangeRequest('username', 'male', '1990-05-20', 'user@example.com'),
+            new SettingsChangeHandler(
                 $this->createMock(DomainUserRepositoryInterface::class),
                 $this->createMock(TokenGeneratorInterface::class),
                 new MailerService($this->createMock(MailerInterface::class), $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
@@ -97,10 +97,10 @@ final class AccountControllersTest extends TestCase
         $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn($newHashedPassword);
         $repository->expects($this->once())->method('updateDomainUser')->with($this->isInstanceOf(DomainUser::class))->willReturnCallback(static fn (DomainUser $user): DomainUser => $user);
 
-        $response = (new ChangeMyPasswordController())->changePassword(
+        $response = (new PasswordChangeController())->changePassword(
             UserFactory::ormUser(id: 5, password: $storedHash),
-            new ChangeMyPasswordRequest('current-password', '12345678'),
-            new ChangeMyPasswordHandler($repository, $passwordHasher),
+            new PasswordChangeRequest('current-password', '12345678'),
+            new PasswordChangeHandler($repository, $passwordHasher),
             new JsonResponder(),
         );
 
@@ -114,15 +114,15 @@ final class AccountControllersTest extends TestCase
 
     public function testChangeMyPasswordControllerRejectsUnauthenticatedUser(): void
     {
-        $controller = new ChangeMyPasswordController();
+        $controller = new PasswordChangeController();
 
         $this->expectException(AccessDeniedException::class);
         $this->expectExceptionMessage('User is not authenticated.');
 
         $controller->changePassword(
             null,
-            new ChangeMyPasswordRequest('current-password', '12345678'),
-            new ChangeMyPasswordHandler(
+            new PasswordChangeRequest('current-password', '12345678'),
+            new PasswordChangeHandler(
                 $this->createMock(DomainUserRepositoryInterface::class),
                 $this->createMock(PasswordHasherInterface::class),
             ),
@@ -132,7 +132,7 @@ final class AccountControllersTest extends TestCase
 
     public function testShowMyProfileControllerReturnsCurrentUserData(): void
     {
-        $response = (new ShowMyProfileController())->me(
+        $response = (new CurrentUserController())->me(
             UserFactory::ormUser(
                 id: 5,
                 email: 'user@example.com',

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Infrastructure\Validator\Constraints;
 
-use App\Infrastructure\Api\Account\ChangeMySettings\ChangeMySettingsRequest;
+use App\Infrastructure\Api\Account\SettingsChange\SettingsChangeRequest;
 use App\Infrastructure\Api\Auth\Register\RegisterRequest;
 use App\Infrastructure\Doctrine\Repository\UserRepository;
 use App\Infrastructure\Validator\Constraints\UniqueUserCredentials;
@@ -93,7 +93,7 @@ final class UniqueUserCredentialsValidatorTest extends ConstraintValidatorTestCa
 
     public function testItIgnoresChangeMySettingsWhenCurrentUserIsMissing(): void
     {
-        $request = new ChangeMySettingsRequest('username', 'male', '1990-05-20', 'user@example.com');
+        $request = new SettingsChangeRequest('username', 'male', '1990-05-20', 'user@example.com');
 
         $this->security->expects($this->once())->method('getUser')->willReturn(null);
         $this->repository->expects($this->never())->method('findOneBy');
@@ -105,7 +105,7 @@ final class UniqueUserCredentialsValidatorTest extends ConstraintValidatorTestCa
 
     public function testItBuildsViolationsWhenChangeMySettingsCredentialsBelongToAnotherUser(): void
     {
-        $request = new ChangeMySettingsRequest('new_user', 'male', '1990-05-20', 'new@example.com');
+        $request = new SettingsChangeRequest('new_user', 'male', '1990-05-20', 'new@example.com');
 
         $this->security->expects($this->once())->method('getUser')->willReturn(UserFactory::ormUser(id: 10, email: 'current@example.com', username: 'current_user'));
         $this->repository
@@ -132,7 +132,7 @@ final class UniqueUserCredentialsValidatorTest extends ConstraintValidatorTestCa
 
     public function testItAllowsChangeMySettingsToReuseOwnCredentials(): void
     {
-        $request = new ChangeMySettingsRequest('current_user', 'male', '1990-05-20', 'current@example.com');
+        $request = new SettingsChangeRequest('current_user', 'male', '1990-05-20', 'current@example.com');
 
         $this->security->expects($this->once())->method('getUser')->willReturn(UserFactory::ormUser(id: 10, email: 'current@example.com', username: 'current_user'));
         $this->repository

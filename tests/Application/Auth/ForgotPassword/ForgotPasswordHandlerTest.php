@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Application\Auth\ForgotPassword;
 
-use App\Application\Auth\ForgotPassword\ForgotPasswordCommand;
-use App\Application\Auth\ForgotPassword\ForgotPasswordHandler;
+use App\Application\Auth\PasswordForgot\PasswordForgotCommand;
+use App\Application\Auth\PasswordForgot\PasswordForgotHandler;
 use App\Domain\Entity\DomainUser;
 use App\Domain\Repository\DomainUserRepositoryInterface;
 use App\Infrastructure\Service\MailerService;
@@ -25,7 +25,7 @@ final class ForgotPasswordHandlerTest extends TestCase
         $mailer = $this->createMock(MailerInterface::class);
         $logger = $this->createMock(LoggerInterface::class);
 
-        $handler = new ForgotPasswordHandler(
+        $handler = new PasswordForgotHandler(
             $repository,
             $tokenGenerator,
             new MailerService($mailer, $logger, 'no-reply@example.com', 'Kehat'),
@@ -65,7 +65,7 @@ final class ForgotPasswordHandlerTest extends TestCase
 
         $logger->expects($this->never())->method('error');
 
-        $result = $handler(new ForgotPasswordCommand(' Test.User@example.com '));
+        $result = $handler(new PasswordForgotCommand(' Test.User@example.com '));
 
         self::assertSame('test.user@example.com', $result->email);
         self::assertSame('If email is valid, you will receive a link to reset your password.', $result->message);
@@ -77,7 +77,7 @@ final class ForgotPasswordHandlerTest extends TestCase
         $tokenGenerator = $this->createMock(TokenGeneratorInterface::class);
         $mailer = $this->createMock(MailerInterface::class);
 
-        $handler = new ForgotPasswordHandler(
+        $handler = new PasswordForgotHandler(
             $repository,
             $tokenGenerator,
             new MailerService($mailer, $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
@@ -88,7 +88,7 @@ final class ForgotPasswordHandlerTest extends TestCase
         $repository->expects($this->never())->method('updateDomainUser');
         $mailer->expects($this->never())->method('send');
 
-        $result = $handler(new ForgotPasswordCommand('user@example.com'));
+        $result = $handler(new PasswordForgotCommand('user@example.com'));
 
         self::assertSame('user@example.com', $result->email);
         self::assertSame('If email is valid, you will receive a link to reset your password.', $result->message);
@@ -98,7 +98,7 @@ final class ForgotPasswordHandlerTest extends TestCase
     {
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
 
-        $handler = new ForgotPasswordHandler(
+        $handler = new PasswordForgotHandler(
             $repository,
             $this->createMock(TokenGeneratorInterface::class),
             new MailerService($this->createMock(MailerInterface::class), $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
@@ -109,6 +109,6 @@ final class ForgotPasswordHandlerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Email is not valid.');
 
-        $handler(new ForgotPasswordCommand('bad-email'));
+        $handler(new PasswordForgotCommand('bad-email'));
     }
 }

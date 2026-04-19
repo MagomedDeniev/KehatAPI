@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Application\Auth\RestorePassword;
 
-use App\Application\Auth\RestorePassword\RestorePasswordCommand;
-use App\Application\Auth\RestorePassword\RestorePasswordHandler;
+use App\Application\Auth\PasswordRestore\PasswordRestoreCommand;
+use App\Application\Auth\PasswordRestore\PasswordRestoreHandler;
 use App\Application\Contract\PasswordHasherInterface;
 use App\Domain\Entity\DomainUser;
 use App\Domain\Repository\DomainUserRepositoryInterface;
@@ -19,7 +19,7 @@ final class RestorePasswordHandlerTest extends TestCase
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
         $passwordHasher = $this->createMock(PasswordHasherInterface::class);
 
-        $handler = new RestorePasswordHandler($passwordHasher, $repository);
+        $handler = new PasswordRestoreHandler($passwordHasher, $repository);
 
         $repository->expects($this->once())->method('findUserByPasswordToken')->with('missing-token')->willReturn(null);
         $passwordHasher->expects($this->never())->method('hash');
@@ -27,7 +27,7 @@ final class RestorePasswordHandlerTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('Invalid password reset token.');
 
-        $handler(new RestorePasswordCommand('missing-token', '12345678'));
+        $handler(new PasswordRestoreCommand('missing-token', '12345678'));
     }
 
     public function testItRejectsExpiredResetToken(): void
@@ -35,7 +35,7 @@ final class RestorePasswordHandlerTest extends TestCase
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
         $passwordHasher = $this->createMock(PasswordHasherInterface::class);
 
-        $handler = new RestorePasswordHandler($passwordHasher, $repository);
+        $handler = new PasswordRestoreHandler($passwordHasher, $repository);
 
         $repository
             ->expects($this->once())
@@ -51,7 +51,7 @@ final class RestorePasswordHandlerTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('Password reset token is invalid or expired.');
 
-        $handler(new RestorePasswordCommand('expired-token', '12345678'));
+        $handler(new PasswordRestoreCommand('expired-token', '12345678'));
     }
 
     public function testItRejectsInvalidNewPassword(): void
@@ -59,7 +59,7 @@ final class RestorePasswordHandlerTest extends TestCase
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
         $passwordHasher = $this->createMock(PasswordHasherInterface::class);
 
-        $handler = new RestorePasswordHandler($passwordHasher, $repository);
+        $handler = new PasswordRestoreHandler($passwordHasher, $repository);
 
         $repository
             ->expects($this->once())
@@ -76,7 +76,7 @@ final class RestorePasswordHandlerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Password length must be between 8 and 4096 characters.');
 
-        $handler(new RestorePasswordCommand('valid-token', 'short'));
+        $handler(new PasswordRestoreCommand('valid-token', 'short'));
     }
 
     public function testItRestoresPasswordAndClearsResetToken(): void
@@ -84,7 +84,7 @@ final class RestorePasswordHandlerTest extends TestCase
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
         $passwordHasher = $this->createMock(PasswordHasherInterface::class);
 
-        $handler = new RestorePasswordHandler($passwordHasher, $repository);
+        $handler = new PasswordRestoreHandler($passwordHasher, $repository);
 
         $user = UserFactory::domainUser(
             id: 15,
@@ -108,7 +108,7 @@ final class RestorePasswordHandlerTest extends TestCase
             }))
             ->willReturnCallback(static fn (DomainUser $updatedUser): DomainUser => $updatedUser);
 
-        $result = $handler(new RestorePasswordCommand('valid-token', '12345678'));
+        $result = $handler(new PasswordRestoreCommand('valid-token', '12345678'));
 
         self::assertSame(15, $result->userId);
         self::assertSame('Your password has been restored, you can login now.', $result->message);
@@ -119,7 +119,7 @@ final class RestorePasswordHandlerTest extends TestCase
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
         $passwordHasher = $this->createMock(PasswordHasherInterface::class);
 
-        $handler = new RestorePasswordHandler($passwordHasher, $repository);
+        $handler = new PasswordRestoreHandler($passwordHasher, $repository);
 
         $repository->expects($this->once())->method('findUserByPasswordToken')->with('valid-token')->willReturn(UserFactory::domainUser(
             id: null,
@@ -134,6 +134,6 @@ final class RestorePasswordHandlerTest extends TestCase
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('Registered user must have id.');
 
-        $handler(new RestorePasswordCommand('valid-token', '12345678'));
+        $handler(new PasswordRestoreCommand('valid-token', '12345678'));
     }
 }

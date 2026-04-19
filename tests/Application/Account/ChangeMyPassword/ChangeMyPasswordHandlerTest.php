@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Application\Account\ChangeMyPassword;
 
-use App\Application\Account\ChangeMyPassword\ChangeMyPasswordCommand;
-use App\Application\Account\ChangeMyPassword\ChangeMyPasswordHandler;
+use App\Application\Account\PasswordChange\PasswordChangeCommand;
+use App\Application\Account\PasswordChange\PasswordChangeHandler;
 use App\Application\Contract\PasswordHasherInterface;
 use App\Domain\Entity\DomainUser;
 use App\Domain\Repository\DomainUserRepositoryInterface;
@@ -19,14 +19,14 @@ final class ChangeMyPasswordHandlerTest extends TestCase
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
         $passwordHasher = $this->createMock(PasswordHasherInterface::class);
 
-        $handler = new ChangeMyPasswordHandler($repository, $passwordHasher);
+        $handler = new PasswordChangeHandler($repository, $passwordHasher);
 
         $repository->expects($this->never())->method('findUserById');
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Password length must be between 8 and 4096 characters.');
 
-        $handler(new ChangeMyPasswordCommand(1, 'current-password', 'short'));
+        $handler(new PasswordChangeCommand(1, 'current-password', 'short'));
     }
 
     public function testItRejectsMissingUser(): void
@@ -34,7 +34,7 @@ final class ChangeMyPasswordHandlerTest extends TestCase
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
         $passwordHasher = $this->createMock(PasswordHasherInterface::class);
 
-        $handler = new ChangeMyPasswordHandler($repository, $passwordHasher);
+        $handler = new PasswordChangeHandler($repository, $passwordHasher);
 
         $repository->expects($this->once())->method('findUserById')->with(123)->willReturn(null);
         $passwordHasher->expects($this->never())->method('verify');
@@ -42,7 +42,7 @@ final class ChangeMyPasswordHandlerTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('User not found.');
 
-        $handler(new ChangeMyPasswordCommand(123, 'current-password', '12345678'));
+        $handler(new PasswordChangeCommand(123, 'current-password', '12345678'));
     }
 
     public function testItRejectsWrongCurrentPassword(): void
@@ -50,7 +50,7 @@ final class ChangeMyPasswordHandlerTest extends TestCase
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
         $passwordHasher = $this->createMock(PasswordHasherInterface::class);
 
-        $handler = new ChangeMyPasswordHandler($repository, $passwordHasher);
+        $handler = new PasswordChangeHandler($repository, $passwordHasher);
 
         $repository->expects($this->once())->method('findUserById')->with(1)->willReturn(UserFactory::domainUser(password: UserFactory::VALID_PASSWORD_HASH));
         $passwordHasher->expects($this->once())->method('verify')->with(UserFactory::VALID_PASSWORD_HASH, 'wrong-password')->willReturn(false);
@@ -60,7 +60,7 @@ final class ChangeMyPasswordHandlerTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('Current password is incorrect.');
 
-        $handler(new ChangeMyPasswordCommand(1, 'wrong-password', '12345678'));
+        $handler(new PasswordChangeCommand(1, 'wrong-password', '12345678'));
     }
 
     public function testItChangesPasswordAndClearsPasswordResetState(): void
@@ -68,7 +68,7 @@ final class ChangeMyPasswordHandlerTest extends TestCase
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
         $passwordHasher = $this->createMock(PasswordHasherInterface::class);
 
-        $handler = new ChangeMyPasswordHandler($repository, $passwordHasher);
+        $handler = new PasswordChangeHandler($repository, $passwordHasher);
 
         $user = UserFactory::domainUser(
             id: 1,
@@ -93,7 +93,7 @@ final class ChangeMyPasswordHandlerTest extends TestCase
             }))
             ->willReturnCallback(static fn (DomainUser $updatedUser): DomainUser => $updatedUser);
 
-        $result = $handler(new ChangeMyPasswordCommand(1, 'current-password', '12345678'));
+        $result = $handler(new PasswordChangeCommand(1, 'current-password', '12345678'));
 
         self::assertSame('Password updated successfully', $result->message);
     }

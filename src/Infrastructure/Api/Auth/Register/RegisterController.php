@@ -7,6 +7,7 @@ namespace App\Infrastructure\Api\Auth\Register;
 use App\Application\Auth\Register\RegisterCommand;
 use App\Application\Auth\Register\RegisterHandler;
 use App\Domain\Enum\GenderEnum;
+use App\Infrastructure\Doctrine\Entity\User;
 use App\Infrastructure\Doctrine\Repository\UserRepository;
 use App\Infrastructure\Service\JsonResponder;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
@@ -21,18 +22,27 @@ class RegisterController extends AbstractController
     /**
      * @throws TransportExceptionInterface
      */
-    #[Route('/api/register', name: 'api_register', methods: ['POST'])]
+    #[Route('/api/auth/register', name: 'api_auth_register', methods: ['POST'])]
     public function register(#[MapRequestPayload] RegisterRequest $registerRequest, RegisterHandler $handler, JsonResponder $responder, UserRepository $userRepository, JWTTokenManagerInterface $JWTManager): JsonResponse
     {
+        $birthDate = \DateTimeImmutable::createFromFormat('Y-m-d', $registerRequest->birthDate);
+        if (!$birthDate instanceof \DateTimeImmutable) {
+            throw new \LogicException('Birth date must use Y-m-d format.');
+        }
+
         $result = $handler(new RegisterCommand(
             username: $registerRequest->username,
             gender: GenderEnum::from($registerRequest->gender),
-            birthDate: \DateTimeImmutable::createFromFormat('Y-m-d', $registerRequest->birthDate),
+            birthDate: $birthDate,
             email: $registerRequest->email,
             password: $registerRequest->password,
         ));
 
         $user = $userRepository->findOneBy(['id' => $result->userId]);
+        if (!$user instanceof User) {
+            throw new \LogicException('Registered user was not found.');
+        }
+
         $token = $JWTManager->create($user);
 
         return $responder->created(

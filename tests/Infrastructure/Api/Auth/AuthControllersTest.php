@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace App\Tests\Infrastructure\Api\Auth;
 
-use App\Application\Auth\ConfirmEmail\ConfirmEmailHandler;
-use App\Application\Auth\ForgotPassword\ForgotPasswordHandler;
+use App\Application\Auth\EmailConfirm\EmailConfirmHandler;
+use App\Application\Auth\PasswordForgot\PasswordForgotHandler;
 use App\Application\Auth\Register\RegisterHandler;
-use App\Application\Auth\RestorePassword\RestorePasswordHandler;
+use App\Application\Auth\PasswordRestore\PasswordRestoreHandler;
 use App\Application\Contract\PasswordHasherInterface;
 use App\Domain\Entity\DomainUser;
 use App\Domain\Repository\DomainUserRepositoryInterface;
-use App\Infrastructure\Api\Auth\ConfirmEmail\ConfirmEmailController;
-use App\Infrastructure\Api\Auth\ConfirmEmail\ConfirmEmailRequest;
-use App\Infrastructure\Api\Auth\ForgotPassword\ForgotPasswordController;
-use App\Infrastructure\Api\Auth\ForgotPassword\ForgotPasswordRequest;
+use App\Infrastructure\Api\Auth\EmailConfirm\EmailConfirmController;
+use App\Infrastructure\Api\Auth\EmailConfirm\EmailConfirmRequest;
+use App\Infrastructure\Api\Auth\PasswordForgot\PasswordForgotController;
+use App\Infrastructure\Api\Auth\PasswordForgot\PasswordForgotRequest;
 use App\Infrastructure\Api\Auth\Register\RegisterController;
 use App\Infrastructure\Api\Auth\Register\RegisterRequest;
-use App\Infrastructure\Api\Auth\RestorePassword\RestorePasswordController;
-use App\Infrastructure\Api\Auth\RestorePassword\RestorePasswordRequest;
+use App\Infrastructure\Api\Auth\PasswordRestore\PasswordRestoreController;
+use App\Infrastructure\Api\Auth\PasswordRestore\PasswordRestoreRequest;
 use App\Infrastructure\Doctrine\Repository\UserRepository;
 use App\Infrastructure\Service\JsonResponder;
 use App\Infrastructure\Service\MailerService;
@@ -95,13 +95,13 @@ final class AuthControllersTest extends TestCase
         $tokenGenerator->expects($this->never())->method('generateToken');
         $mailer->expects($this->never())->method('send');
 
-        $response = (new ForgotPasswordController(
+        $response = (new PasswordForgotController(
             $this->createNoLimitFactory('forgot-password-ip'),
             $this->createNoLimitFactory('forgot-password-email'),
         ))->forgotPassword(
             $request,
-            new ForgotPasswordRequest('user@example.com'),
-            new ForgotPasswordHandler(
+            new PasswordForgotRequest('user@example.com'),
+            new PasswordForgotHandler(
                 $repository,
                 $tokenGenerator,
                 new MailerService($mailer, $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
@@ -132,9 +132,9 @@ final class AuthControllersTest extends TestCase
         $passwordHasher->expects($this->once())->method('hash')->with('12345678')->willReturn($newHashedPassword);
         $repository->expects($this->once())->method('updateDomainUser')->with($this->isInstanceOf(DomainUser::class))->willReturnCallback(static fn (DomainUser $updatedUser): DomainUser => $updatedUser);
 
-        $response = (new RestorePasswordController())->restorePassword(
-            new RestorePasswordRequest('valid-token', '12345678'),
-            new RestorePasswordHandler($passwordHasher, $repository),
+        $response = (new PasswordRestoreController())->restorePassword(
+            new PasswordRestoreRequest('valid-token', '12345678'),
+            new PasswordRestoreHandler($passwordHasher, $repository),
             new JsonResponder(),
         );
 
@@ -159,9 +159,9 @@ final class AuthControllersTest extends TestCase
         $repository->expects($this->once())->method('findUserByEmailToken')->with('valid-token')->willReturn($user);
         $repository->expects($this->once())->method('updateDomainUser')->with($this->isInstanceOf(DomainUser::class))->willReturnCallback(static fn (DomainUser $updatedUser): DomainUser => $updatedUser);
 
-        $response = (new ConfirmEmailController())->confirmEmail(
-            new ConfirmEmailRequest('valid-token'),
-            new ConfirmEmailHandler($repository),
+        $response = (new EmailConfirmController())->confirmEmail(
+            new EmailConfirmRequest('valid-token'),
+            new EmailConfirmHandler($repository),
             new JsonResponder(),
         );
 

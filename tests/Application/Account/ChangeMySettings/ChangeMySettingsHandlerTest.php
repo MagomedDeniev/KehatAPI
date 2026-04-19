@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Application\Account\ChangeMySettings;
 
-use App\Application\Account\ChangeMySettings\ChangeMySettingsCommand;
-use App\Application\Account\ChangeMySettings\ChangeMySettingsHandler;
+use App\Application\Account\SettingsChange\SettingsChangeCommand;
+use App\Application\Account\SettingsChange\SettingsChangeHandler;
 use App\Domain\Entity\DomainUser;
 use App\Domain\Enum\GenderEnum;
 use App\Domain\Repository\DomainUserRepositoryInterface;
@@ -24,7 +24,7 @@ final class ChangeMySettingsHandlerTest extends TestCase
     public function testItRejectsMissingUser(): void
     {
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
-        $handler = new ChangeMySettingsHandler(
+        $handler = new SettingsChangeHandler(
             $repository,
             $this->createMock(TokenGeneratorInterface::class),
             new MailerService($this->createMock(MailerInterface::class), $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
@@ -36,13 +36,13 @@ final class ChangeMySettingsHandlerTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('User not found.');
 
-        $handler(new ChangeMySettingsCommand(99, 'username', GenderEnum::MALE, new \DateTimeImmutable(self::BIRTH_DATE), 'user@example.com'));
+        $handler(new SettingsChangeCommand(99, 'username', GenderEnum::MALE, new \DateTimeImmutable(self::BIRTH_DATE), 'user@example.com'));
     }
 
     public function testItRejectsDuplicateEmailOwnedByAnotherUser(): void
     {
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
-        $handler = new ChangeMySettingsHandler(
+        $handler = new SettingsChangeHandler(
             $repository,
             $this->createMock(TokenGeneratorInterface::class),
             new MailerService($this->createMock(MailerInterface::class), $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
@@ -60,13 +60,13 @@ final class ChangeMySettingsHandlerTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('There is already an account with this email.');
 
-        $handler(new ChangeMySettingsCommand(10, 'username', GenderEnum::MALE, new \DateTimeImmutable(self::BIRTH_DATE), 'new@example.com'));
+        $handler(new SettingsChangeCommand(10, 'username', GenderEnum::MALE, new \DateTimeImmutable(self::BIRTH_DATE), 'new@example.com'));
     }
 
     public function testItRejectsDuplicateUsernameOwnedByAnotherUser(): void
     {
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
-        $handler = new ChangeMySettingsHandler(
+        $handler = new SettingsChangeHandler(
             $repository,
             $this->createMock(TokenGeneratorInterface::class),
             new MailerService($this->createMock(MailerInterface::class), $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
@@ -83,7 +83,7 @@ final class ChangeMySettingsHandlerTest extends TestCase
         $this->expectException(\DomainException::class);
         $this->expectExceptionMessage('There is already an account with this username.');
 
-        $handler(new ChangeMySettingsCommand(10, 'new_name', GenderEnum::MALE, new \DateTimeImmutable(self::BIRTH_DATE), 'user@example.com'));
+        $handler(new SettingsChangeCommand(10, 'new_name', GenderEnum::MALE, new \DateTimeImmutable(self::BIRTH_DATE), 'user@example.com'));
     }
 
     public function testItAllowsSameCredentialsForCurrentUserWithoutSendingEmail(): void
@@ -92,7 +92,7 @@ final class ChangeMySettingsHandlerTest extends TestCase
         $tokenGenerator = $this->createMock(TokenGeneratorInterface::class);
         $mailer = $this->createMock(MailerInterface::class);
 
-        $handler = new ChangeMySettingsHandler(
+        $handler = new SettingsChangeHandler(
             $repository,
             $tokenGenerator,
             new MailerService($mailer, $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
@@ -120,7 +120,7 @@ final class ChangeMySettingsHandlerTest extends TestCase
             }))
             ->willReturnCallback(static fn (DomainUser $updatedUser): DomainUser => $updatedUser);
 
-        $result = $handler(new ChangeMySettingsCommand(10, 'new_name', GenderEnum::FEMALE, new \DateTimeImmutable(self::BIRTH_DATE), 'user@example.com'));
+        $result = $handler(new SettingsChangeCommand(10, 'new_name', GenderEnum::FEMALE, new \DateTimeImmutable(self::BIRTH_DATE), 'user@example.com'));
 
         self::assertSame('Your settings updated successfully.', $result->message);
         self::assertFalse($result->emailUpdated);
@@ -132,7 +132,7 @@ final class ChangeMySettingsHandlerTest extends TestCase
         $tokenGenerator = $this->createMock(TokenGeneratorInterface::class);
         $mailer = $this->createMock(MailerInterface::class);
 
-        $handler = new ChangeMySettingsHandler(
+        $handler = new SettingsChangeHandler(
             $repository,
             $tokenGenerator,
             new MailerService($mailer, $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
@@ -180,7 +180,7 @@ final class ChangeMySettingsHandlerTest extends TestCase
             }))
             ->willReturnCallback(static fn (DomainUser $updatedUser): DomainUser => $updatedUser);
 
-        $result = $handler(new ChangeMySettingsCommand(10, 'new_name', GenderEnum::FEMALE, new \DateTimeImmutable(self::BIRTH_DATE), 'new@example.com'));
+        $result = $handler(new SettingsChangeCommand(10, 'new_name', GenderEnum::FEMALE, new \DateTimeImmutable(self::BIRTH_DATE), 'new@example.com'));
 
         self::assertSame('Your settings updated successfully.', $result->message);
         self::assertTrue($result->emailUpdated);
@@ -190,7 +190,7 @@ final class ChangeMySettingsHandlerTest extends TestCase
     {
         $repository = $this->createMock(DomainUserRepositoryInterface::class);
 
-        $handler = new ChangeMySettingsHandler(
+        $handler = new SettingsChangeHandler(
             $repository,
             $this->createMock(TokenGeneratorInterface::class),
             new MailerService($this->createMock(MailerInterface::class), $this->createStub(LoggerInterface::class), 'no-reply@example.com', 'Kehat'),
@@ -203,6 +203,6 @@ final class ChangeMySettingsHandlerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Email is not valid.');
 
-        $handler(new ChangeMySettingsCommand(10, 'username', GenderEnum::MALE, new \DateTimeImmutable(self::BIRTH_DATE), 'bad-email'));
+        $handler(new SettingsChangeCommand(10, 'username', GenderEnum::MALE, new \DateTimeImmutable(self::BIRTH_DATE), 'bad-email'));
     }
 }
