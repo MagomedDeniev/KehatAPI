@@ -23,6 +23,10 @@ final class ValidPasswordTokenValidator extends ConstraintValidator
             throw new UnexpectedTypeException($constraint, ValidPasswordToken::class);
         }
 
+        if (!is_string($value)) {
+            return;
+        }
+
         $user = $this->userRepository->findOneBy(['passwordToken' => $value]);
 
         if (!$user instanceof User || !$user->hasValidPasswordToken($value)) {

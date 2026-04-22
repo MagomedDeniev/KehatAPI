@@ -33,7 +33,7 @@ final readonly class PasswordChangeHandler
             throw new \DomainException('Current password is incorrect.');
         }
 
-        $newHashedPassword = new HashedPassword($this->passwordHasher->hashPassword($user,(string) $newPassword));
+        $newHashedPassword = new HashedPassword($this->passwordHasher->hashPassword($user, (string) $newPassword));
         $user->changePassword($newHashedPassword);
         $this->userRepository->updateUser($user);
 

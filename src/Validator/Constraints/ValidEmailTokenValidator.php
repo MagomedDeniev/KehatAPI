@@ -23,6 +23,10 @@ final class ValidEmailTokenValidator extends ConstraintValidator
             throw new UnexpectedTypeException($constraint, ValidEmailToken::class);
         }
 
+        if (!is_string($value)) {
+            return;
+        }
+
         $user = $this->userRepository->findOneBy(['emailToken' => $value]);
 
         if (!$user instanceof User || !$user->hasValidEmailToken($value)) {
